@@ -104,10 +104,16 @@ impl Node {
     }
 
     fn compensate_insertion(&mut self, btree: &mut BTree) -> Result<(), ()> {
-        todo!();
-        /*let (mut parent, key_position_in_parent, mut sibling) =
+        let (mut parent, key_position_in_parent, mut sibling) =
                     self.get_compensation_partners(btree)?;
 
+        println!("{:?}", parent);
+        println!("{:?}", key_position_in_parent);
+        println!("{:?}", sibling);
+
+        todo!()
+
+        /*
                 // create pools
                 let mut key_pool = self.keys.clone();
                 key_pool.push(parent.keys[key_position_in_parent]);
@@ -169,9 +175,9 @@ impl Node {
             return;
         }
 
-        /*if let Ok(_) = self.compensate_insertion(btree) {
+        if let Ok(_) = self.compensate_insertion(btree) {
             return;
-        }*/
+        }
 
         self.split(btree);
     }
@@ -264,7 +270,7 @@ mod tests {
 
         #[test]
         fn search_root_find() {
-            let path = Path::new("test_files/search_empty.json");
+            let path = Path::new("test_files/search_root_find.json");
             let mut btree = BTree::new(&path, 3);
 
             btree.insert(1).unwrap();
@@ -278,7 +284,7 @@ mod tests {
 
         #[test]
         fn search_root_not_found() {
-            let path = Path::new("test_files/search_empty.json");
+            let path = Path::new("test_files/search_root_not_found.json");
             let mut btree = BTree::new(&path, 3);
 
             btree.insert(1).unwrap();
