@@ -47,7 +47,7 @@ impl NodesFile {
         nodes = serde_json::from_reader(reader).unwrap();
         nodes[node.id as usize] = node.clone();
 
-        //println!("{:?}", nodes);
+        println!("{:?}", nodes);
 
         self.file.rewind().unwrap();
         self.file.set_len(0).unwrap();

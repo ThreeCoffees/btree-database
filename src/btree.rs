@@ -105,11 +105,7 @@ impl Node {
 
     fn compensate_insertion(&mut self, btree: &mut BTree) -> Result<(), ()> {
         let (mut parent, key_position_in_parent, mut sibling) =
-                    self.get_compensation_partners(btree)?;
-
-        println!("{:?}", parent);
-        println!("{:?}", key_position_in_parent);
-        println!("{:?}", sibling);
+            self.get_compensation_partners(btree)?;
 
         todo!()
 
@@ -161,7 +157,14 @@ impl Node {
         new_node.keys = self.keys.split_off(btree.order + 1);
         new_node.children = self.children.split_off(btree.order + 1);
 
-        parent.insert(btree, self.keys.split_off(btree.order)[0], Some(self.id), Some(new_node.id)).unwrap();
+        parent
+            .insert(
+                btree,
+                self.keys.split_off(btree.order)[0],
+                Some(self.id),
+                Some(new_node.id),
+            )
+            .unwrap();
 
         self.parent_node_id = Some(parent.id);
         new_node.parent_node_id = Some(parent.id);
@@ -174,11 +177,11 @@ impl Node {
         if self.keys.len() <= 2 * btree.order {
             return;
         }
-
         if let Ok(_) = self.compensate_insertion(btree) {
             return;
         }
 
+        println!("Split began");
         self.split(btree);
     }
 
@@ -189,9 +192,13 @@ impl Node {
         left_child: Option<u64>,
         right_child: Option<u64>,
     ) -> Result<(), ()> {
+        println!("Insert {:?} began", new_key);
+
         self.basic_insert(btree, new_key, left_child, right_child);
         btree.nodes_file.update_node(self);
         self.handle_overflow(btree);
+
+        println!("Insert {:?} finished", new_key);
         return Ok(());
     }
 }
@@ -224,12 +231,19 @@ impl BTree {
         match self.search(key) {
             Ok((address, node_id)) => Err(()),
             Err((address, node_id)) => {
-                let mut root = match self.root_id {
-                    Some(id) => self.nodes_file.get_node(id),
-                    None => self.create_new_root(true),
-                };
+                if let None = self.root_id {
+                    self.create_new_root(true);
+                }
+                let mut node = self.nodes_file.get_node(node_id);
+                node.insert(self, key, None, None)
+                /*
+                                let mut root = match self.root_id {
+                                    Some(id) => self.nodes_file.get_node(id),
+                                    None => self.create_new_root(true),
+                                };
 
-                root.insert(self, key, None, None)
+                                root.insert(self, key, None, None)
+                */
             }
         }
     }
@@ -403,8 +417,32 @@ mod tests {
         }
 
         #[test]
-        fn insert_into_full_leaf() {
-            let path = Path::new("test_files/insert_into_full_leaf.json");
+        fn insert_into_full_leaf_split() {
+            let path = Path::new("test_files/insert_into_full_leaf_split.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(7).unwrap();
+
+            btree.insert(9).unwrap();
+            btree.insert(11).unwrap();
+            btree.insert(13).unwrap();
+            btree.insert(15).unwrap();
+
+            btree.insert(17).unwrap();
+            btree.insert(18).unwrap();
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[7,9],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5,11],\"children\":[0,1,3],\"is_leaf\":false,\"id\":2},{\"parent_node_id\":2,\"keys\":[13,15,17,18],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":3}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn insert_into_full_leaf_compensation() {
+            let path = Path::new("test_files/insert_into_full_leaf_compensation.json");
             let mut btree = BTree::new(&path, 2);
 
             btree.insert(1).unwrap();
