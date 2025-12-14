@@ -394,6 +394,16 @@ impl BTree {
         Ok(())
     }
 
+    pub fn update(&mut self, old_key: u64, new_key: u64) -> Result<(), ()> {
+        if let Ok(_) =  self.search(new_key) {
+            return Err(())
+        }
+        self.delete(old_key)?;
+        self.insert(new_key)?;
+
+        Ok(())
+    }
+
     pub fn create_new_root(&mut self, is_leaf: bool) -> Node {
         let mut root = Node::new(is_leaf, self.get_next_id(), self.order);
         self.nodes_file.create_node(&root);
@@ -711,5 +721,90 @@ mod tests {
 
     mod update_tests {
         use super::*;
+
+        #[test]
+        fn update_same_node() {
+            let path = Path::new("test_files/update_same_node.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(0).unwrap();
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(6).unwrap();
+            btree.insert(7).unwrap();
+
+            btree.update(1, 3).unwrap();
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[0,2,3,4],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[6,7],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn update_non_existent() {
+            let path = Path::new("test_files/update_non_existent.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(0).unwrap();
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(6).unwrap();
+            btree.insert(7).unwrap();
+
+            assert!(btree.update(3, 8).is_err());
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[0,1],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[4,5,6,7],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[2],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn update_into_existing() {
+            let path = Path::new("test_files/update_into_existing.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(0).unwrap();
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(6).unwrap();
+            btree.insert(7).unwrap();
+
+            assert!(btree.update(1, 2).is_err());
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[0,1],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[4,5,6,7],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[2],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn update_change_node() {
+            let path = Path::new("test_files/update_change_node.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(0).unwrap();
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(6).unwrap();
+            btree.insert(7).unwrap();
+
+            btree.update(1, 8).unwrap();
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[0,2,4],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[6,7,8],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
     }
 }
