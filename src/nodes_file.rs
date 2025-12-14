@@ -1,6 +1,6 @@
 use std::{fs::File, io::{BufReader, BufWriter, Seek}, path::Path};
 
-use crate::btree::Node;
+use crate::node::Node;
 
 #[derive(Debug)]
 pub struct NodesFile {

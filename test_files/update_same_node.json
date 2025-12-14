@@ -1,1 +1,1 @@
-[{"parent_node_id":2,"keys":[0,2,3,4],"children":[null,null,null,null,null],"is_leaf":true,"id":0},{"parent_node_id":2,"keys":[6,7],"children":[null,null,null],"is_leaf":true,"id":1},{"parent_node_id":null,"keys":[5],"children":[0,1],"is_leaf":false,"id":2}]
+[{"parent_node_id":2,"keys":[0,2,3,4],"children":[null,null,null,null,null],"is_leaf":true,"is_deleted":false,"id":0},{"parent_node_id":2,"keys":[6,7],"children":[null,null,null],"is_leaf":true,"is_deleted":false,"id":1},{"parent_node_id":null,"keys":[5],"children":[0,1],"is_leaf":false,"is_deleted":false,"id":2}]
