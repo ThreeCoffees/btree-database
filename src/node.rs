@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{btree::BTree, record::Record};
+use crate::{
+    btree::{self, BTree},
+    record::Record,
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node {
@@ -177,7 +180,7 @@ impl Node {
         larger_sib.keys = key_pool.split_off(split_point / 2 + 1);
         larger_sib.children = children_pool.split_off(split_point / 2 + 1);
 
-        parent.keys[key_position_in_parent] = key_pool.split_off(split_point/2)[0];
+        parent.keys[key_position_in_parent] = key_pool.split_off(split_point / 2)[0];
 
         smaller_sib.keys = key_pool.split_off(0);
         smaller_sib.children = children_pool.split_off(0);
@@ -228,12 +231,7 @@ impl Node {
         let parent_record = self.keys.split_off(btree.order)[0];
 
         parent
-            .insert(
-                btree,
-                parent_record,
-                Some(self.id),
-                Some(new_node.id),
-            )
+            .insert(btree, parent_record, Some(self.id), Some(new_node.id))
             .unwrap();
 
         self.parent_node_id = Some(parent.id);
@@ -244,6 +242,7 @@ impl Node {
     }
 
     fn handle_overflow(&mut self, btree: &mut BTree) {
+        println!("overflow check");
         if self.keys.len() > 2 * btree.order {
             if let Ok(_) = self.compensate_insertion(btree) {
                 return;
@@ -255,12 +254,80 @@ impl Node {
                 return;
             }
 
+            println!("handling overflow");
             self.merge(btree);
+        } else if self.keys.len() == 0 {
+            println!("handling full delete");
+            btree.root_id = self.children[0];
+            if let Some(child_id) = self.children[0] {
+                let mut node = btree.get_node(child_id);
+                node.parent_node_id = None;
+                btree.nodes_file.update_node(&node);
+            }
+            self.is_deleted = true;
+            btree.nodes_file.update_node(self);
         }
     }
 
+    fn get_parent(&mut self, btree: &mut BTree) -> (Node, usize) {
+        let parent = btree.nodes_file.get_node(self.parent_node_id.unwrap());
+
+        let position_in_parent: usize = parent
+            .children
+            .iter()
+            .position(|c| c == &Some(self.id))
+            .unwrap();
+
+        (parent, position_in_parent)
+    }
+
     fn merge(&mut self, btree: &mut BTree) {
-        todo!();
+        let (mut parent, position_in_parent) = self.get_parent(btree);
+
+        if position_in_parent < parent.keys.len() {
+            let mut sibling = btree.nodes_file.get_node(position_in_parent as u64 + 1);
+
+            self.keys.push(parent.keys.remove(position_in_parent));
+            parent.children.remove(position_in_parent + 1);
+
+            self.keys.append(&mut sibling.keys);
+            for child_id in sibling.children.iter_mut() {
+                if let Some(id) = child_id {
+                    let mut node = btree.get_node(id.clone());
+                    node.parent_node_id = Some(self.id);
+                    btree.nodes_file.update_node(&node);
+                }
+            }
+            self.children.append(&mut sibling.children);
+
+            sibling.is_deleted = true;
+            btree.nodes_file.update_node(&sibling);
+        } else {
+            let mut sibling = btree.nodes_file.get_node(position_in_parent as u64 - 1);
+
+            sibling
+                .keys
+                .push(parent.keys.remove(position_in_parent - 1));
+            parent.children.remove(position_in_parent);
+
+            sibling.keys.append(&mut self.keys);
+            for child_id in self.children.iter_mut() {
+                if let Some(id) = child_id {
+                    let mut node = btree.get_node(id.clone());
+                    node.parent_node_id = Some(sibling.id);
+                    btree.nodes_file.update_node(&node);
+                }
+            }
+            sibling.children.append(&mut self.children);
+
+            self.is_deleted = true;
+            btree.nodes_file.update_node(&sibling);
+        };
+
+        btree.nodes_file.update_node(self);
+        btree.nodes_file.update_node(&parent);
+
+        parent.handle_overflow(btree);
     }
 
     pub fn insert(
@@ -301,7 +368,10 @@ impl Node {
     }
 
     fn basic_delete(&mut self, btree: &mut BTree, deleted_key: u64) -> u64 {
-        let key_position: usize = self.keys.binary_search_by(|r| r.key.cmp(&deleted_key)).unwrap();
+        let key_position: usize = self
+            .keys
+            .binary_search_by(|r| r.key.cmp(&deleted_key))
+            .unwrap();
         match self.is_leaf {
             true => {
                 self.keys.remove(key_position);
@@ -348,4 +418,3 @@ impl Node {
         return Ok(());
     }
 }
-
