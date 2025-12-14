@@ -2,7 +2,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::nodes_file::NodesFile;
+use crate::{btree, nodes_file::NodesFile};
 
 //const D: usize = 3;
 
@@ -65,22 +65,68 @@ impl Node {
         btree.nodes_file.update_node(self);
     }
 
-    fn get_compensation_partners(&mut self, btree: &mut BTree) -> Result<(Node, usize, Node), ()> {
+    fn get_compensation_partners_deletion(
+        &mut self,
+        btree: &mut BTree,
+    ) -> Result<(Node, usize, Node), ()> {
+        match self.parent_node_id {
+            Some(parent_id) => {
+                let parent = btree.nodes_file.get_node(parent_id);
+                println!("parent found: {:?}", parent);
+
+                let position_in_parent: usize = parent
+                    .children
+                    .iter()
+                    .position(|c| c == &Some(self.id))
+                    .unwrap();
+
+                if position_in_parent > 0 {
+                    let sibling_left = btree.nodes_file.get_node(position_in_parent as u64 - 1);
+                    if sibling_left.keys.len() == btree.order {
+                        if position_in_parent < parent.children.len() - 1 {
+                            let sibling_right =
+                                btree.nodes_file.get_node(position_in_parent as u64 + 1);
+                            if sibling_right.keys.len() == btree.order {
+                                return Err(());
+                            }
+                            return Ok((parent, position_in_parent, sibling_left));
+                        }
+                        return Err(());
+                    }
+                    return Ok((parent, position_in_parent - 1, sibling_left));
+                } else {
+                    let sibling = btree.nodes_file.get_node(position_in_parent as u64 + 1);
+                    if sibling.keys.len() == btree.order {
+                        return Err(());
+                    }
+                    return Ok((parent, 0, sibling));
+                }
+            }
+            None => Err(()),
+        }
+    }
+
+    fn get_compensation_partners_insertion(
+        &mut self,
+        btree: &mut BTree,
+    ) -> Result<(Node, usize, Node), ()> {
         match self.parent_node_id {
             Some(parent_id) => {
                 let parent = btree.nodes_file.get_node(parent_id);
 
-                if parent.keys.len() == 1 {
-                    return Err(());
-                }
+                let position_in_parent: usize = parent
+                    .children
+                    .iter()
+                    .position(|c| c == &Some(self.id))
+                    .unwrap();
 
-                let position_in_parent: usize =
-                    parent.children.binary_search(&Some(self.id)).unwrap();
+                println!("Parent: {:?}", parent);
+                println!("Position in parent: {:?}", position_in_parent);
 
                 if position_in_parent > 0 {
                     let sibling_left = btree.nodes_file.get_node(position_in_parent as u64 - 1);
                     if sibling_left.keys.len() == 2 * btree.order {
-                        if position_in_parent < 2 * btree.order {
+                        if position_in_parent < parent.children.len() - 1 {
                             let sibling_right =
                                 btree.nodes_file.get_node(position_in_parent as u64 + 1);
                             if sibling_right.keys.len() == 2 * btree.order {
@@ -103,17 +149,20 @@ impl Node {
         }
     }
 
-    fn compensate_insertion(&mut self, btree: &mut BTree) -> Result<(), ()> {
-        let (mut parent, key_position_in_parent, mut sibling) =
-            self.get_compensation_partners(btree)?;
-
+    fn compensate(
+        &mut self,
+        btree: &mut BTree,
+        parent: &mut Node,
+        key_position_in_parent: usize,
+        sibling: &mut Node,
+    ) -> Result<(), ()> {
         let mut key_pool;
         let mut children_pool;
 
         let (smaller_sib, larger_sib) = if self.keys[0] <= sibling.keys[0] {
-            (self, &mut sibling)
+            (self, sibling)
         } else {
-            (&mut sibling, self)
+            (sibling, self)
         };
 
         key_pool = smaller_sib.keys.split_off(0);
@@ -123,11 +172,15 @@ impl Node {
         key_pool.append(&mut larger_sib.keys.split_off(0));
         children_pool.append(&mut larger_sib.children.split_off(0));
 
-        larger_sib.keys = key_pool.split_off(2* btree.order + 1);
-        larger_sib.children = children_pool.split_off(2*btree.order + 1);
+        println!("Key pool: {:?}", key_pool);
+        println!("Children pool: {:?}", children_pool);
 
+        let split_point = key_pool.len();
 
-        parent.keys[key_position_in_parent] = key_pool.split_off(2*btree.order)[0];
+        larger_sib.keys = key_pool.split_off(split_point / 2 + 1);
+        larger_sib.children = children_pool.split_off(split_point / 2 + 1);
+
+        parent.keys[key_position_in_parent] = key_pool.split_off(split_point/2)[0];
 
         smaller_sib.keys = key_pool.split_off(0);
         smaller_sib.children = children_pool.split_off(0);
@@ -137,6 +190,22 @@ impl Node {
         btree.nodes_file.update_node(&parent);
 
         Ok(())
+    }
+
+    fn compensate_insertion(&mut self, btree: &mut BTree) -> Result<(), ()> {
+        let (mut parent, key_position_in_parent, mut sibling) =
+            self.get_compensation_partners_insertion(btree)?;
+
+        self.compensate(btree, &mut parent, key_position_in_parent, &mut sibling)
+    }
+
+    fn compensate_deletion(&mut self, btree: &mut BTree) -> Result<(), ()> {
+        println!("Try compensating deletion");
+        let (mut parent, key_position_in_parent, mut sibling) =
+            self.get_compensation_partners_deletion(btree)?;
+        println!("Compensating deletion");
+
+        self.compensate(btree, &mut parent, key_position_in_parent, &mut sibling)
     }
 
     fn insert_into_sorted(dest: &mut Vec<u64>, new_key: u64) {
@@ -176,16 +245,23 @@ impl Node {
     }
 
     fn handle_overflow(&mut self, btree: &mut BTree) {
-        if self.keys.len() <= 2 * btree.order {
-            return;
-        }
-        if let Ok(_) = self.compensate_insertion(btree) {
-            println!("Compensated ");
-            return;
-        }
+        if self.keys.len() > 2 * btree.order {
+            if let Ok(_) = self.compensate_insertion(btree) {
+                return;
+            }
 
-        println!("Split began");
-        self.split(btree);
+            self.split(btree);
+        } else if self.keys.len() < btree.order && self.id != btree.root_id.unwrap() {
+            if let Ok(_) = self.compensate_deletion(btree) {
+                return;
+            }
+
+            self.merge(btree);
+        }
+    }
+
+    fn merge(&mut self, btree: &mut BTree) {
+        todo!();
     }
 
     fn insert(
@@ -202,6 +278,74 @@ impl Node {
         self.handle_overflow(btree);
 
         println!("Insert {:?} finished", new_key);
+        return Ok(());
+    }
+
+    fn get_smallest_in_subtree(&self, btree: &mut BTree) -> (u64, u64) {
+        match self.children[0] {
+            Some(child_id) => btree
+                .nodes_file
+                .get_node(child_id)
+                .get_smallest_in_subtree(btree),
+            None => (self.keys[0], self.id),
+        }
+    }
+
+    fn get_largest_in_subtree(&self, btree: &mut BTree) -> (u64, u64) {
+        match self.children.last().unwrap() {
+            Some(child_id) => btree
+                .nodes_file
+                .get_node(child_id.clone())
+                .get_largest_in_subtree(btree),
+            None => (self.keys.last().unwrap().clone(), self.id),
+        }
+    }
+
+    fn basic_delete(&mut self, btree: &mut BTree, deleted_key: u64) -> u64 {
+        let key_position: usize = self.keys.binary_search(&deleted_key).unwrap();
+        match self.is_leaf {
+            true => {
+                self.keys.remove(key_position);
+                self.children.remove(key_position);
+
+                if self.keys.len() == 0 {
+                    self.children.remove(0);
+                }
+
+                btree.nodes_file.update_node(self);
+                self.id
+            }
+            false => {
+                let sibling = btree.get_node(self.children[key_position + 1].unwrap());
+                let (key, node_id) = sibling.get_smallest_in_subtree(btree);
+
+                let mut borrowing_leaf = btree.get_node(node_id);
+
+                self.keys[key_position] = key;
+
+                borrowing_leaf.keys.remove(0);
+                borrowing_leaf.children.remove(0);
+                if borrowing_leaf.keys.len() == 0 {
+                    borrowing_leaf.children.remove(0);
+                }
+
+                btree.nodes_file.update_node(self);
+                btree.nodes_file.update_node(&borrowing_leaf);
+
+                node_id
+            }
+        }
+    }
+
+    fn delete(&mut self, btree: &mut BTree, deleted_key: u64) -> Result<(), ()> {
+        println!("Delete {:?} began", deleted_key);
+
+        let deletion_node_id = self.basic_delete(btree, deleted_key);
+        let mut deletion_node = btree.get_node(deletion_node_id);
+        btree.nodes_file.update_node(&deletion_node);
+        deletion_node.handle_overflow(btree);
+
+        println!("Delete {:?} finished", deleted_key);
         return Ok(());
     }
 }
@@ -241,6 +385,13 @@ impl BTree {
                 node.insert(self, key, None, None)
             }
         }
+    }
+
+    pub fn delete(&mut self, key: u64) -> Result<(), ()> {
+        let (key_pos, node_id) = self.search(key).map_err(|e| ())?;
+
+        self.get_node(node_id).delete(self, key);
+        Ok(())
     }
 
     pub fn create_new_root(&mut self, is_leaf: bool) -> Node {
@@ -429,7 +580,7 @@ mod tests {
             btree.insert(17).unwrap();
             btree.insert(18).unwrap();
 
-            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[7,9],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5,11],\"children\":[0,1,3],\"is_leaf\":false,\"id\":2},{\"parent_node_id\":2,\"keys\":[13,15,17,18],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":3}]";
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3,5,7],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[11,13],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[9,15],\"children\":[0,1,3],\"is_leaf\":false,\"id\":2},{\"parent_node_id\":2,\"keys\":[17,18],\"children\":[null,null,null],\"is_leaf\":true,\"id\":3}]";
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
@@ -455,10 +606,110 @@ mod tests {
             btree.insert(19).unwrap();
             btree.insert(20).unwrap();
 
-            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[7,9,11,13],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5,15],\"children\":[0,1,3],\"is_leaf\":false,\"id\":2},{\"parent_node_id\":2,\"keys\":[17,18,19,20],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":3}]";
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3,5,7],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[11,13],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[9,15],\"children\":[0,1,3],\"is_leaf\":false,\"id\":2},{\"parent_node_id\":2,\"keys\":[17,18,19,20],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":3}]";
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
         }
+    }
+
+    mod delete_tests {
+        use super::*;
+
+        #[test]
+        fn delete_from_empty() {
+            let path = Path::new("test_files/delete_from_empty.json");
+            let mut btree = BTree::new(&path, 2);
+
+            assert!(btree.delete(0).is_err());
+
+            let correct_btree = "";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn delete_non_existent() {
+            let path = Path::new("test_files/delete_non_existent.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            assert!(btree.delete(6).is_err());
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,2],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[4,5],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[3],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn delete_from_root() {
+            let path = Path::new("test_files/delete_from_root.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(4).unwrap();
+
+            btree.delete(3).unwrap();
+
+            let correct_btree = "[{\"parent_node_id\":null,\"keys\":[1,2,4],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":0}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn delete_from_leaf() {
+            let path = Path::new("test_files/delete_from_leaf.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(6).unwrap();
+
+            btree.delete(2).unwrap();
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[5,6],\"children\":[null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[4],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn delete_from_middle() {
+            let path = Path::new("test_files/delete_from_middle.json");
+            let mut btree = BTree::new(&path, 2);
+
+            btree.insert(0).unwrap();
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(4).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(6).unwrap();
+            btree.insert(7).unwrap();
+            btree.insert(8).unwrap();
+
+            btree.delete(5).unwrap();
+
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[0,1,2,3],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[6,7,8],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[4],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+    }
+
+    mod update_tests {
+        use super::*;
     }
 }
