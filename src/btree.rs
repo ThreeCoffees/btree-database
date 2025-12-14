@@ -107,34 +107,36 @@ impl Node {
         let (mut parent, key_position_in_parent, mut sibling) =
             self.get_compensation_partners(btree)?;
 
-        todo!()
+        let mut key_pool;
+        let mut children_pool;
 
-        /*
-                // create pools
-                let mut key_pool = self.keys.clone();
-                key_pool.push(parent.keys[key_position_in_parent]);
-                key_pool.append(&mut sibling.keys);
-                let mut children_pool = self.children.clone();
-                children_pool.append(&mut sibling.children);
+        let (smaller_sib, larger_sib) = if self.keys[0] <= sibling.keys[0] {
+            (self, &mut sibling)
+        } else {
+            (&mut sibling, self)
+        };
 
-                Self::insert_into_sorted(&mut key_pool, new_key);
+        key_pool = smaller_sib.keys.split_off(0);
+        children_pool = smaller_sib.children.split_off(0);
 
-                // distribute from pools
-                let split_point = key_pool.len() / 2;
+        key_pool.push(parent.keys[key_position_in_parent]);
+        key_pool.append(&mut larger_sib.keys.split_off(0));
+        children_pool.append(&mut larger_sib.children.split_off(0));
 
-                sibling.keys = key_pool.split_off(split_point + 1);
-                sibling.children = children_pool.split_off(split_point);
-                parent.keys[key_position_in_parent] = key_pool.split_off(split_point)[0];
-                self.keys = key_pool;
-                self.children = children_pool;
+        larger_sib.keys = key_pool.split_off(2* btree.order + 1);
+        larger_sib.children = children_pool.split_off(2*btree.order + 1);
 
-                // update in files
-                btree.nodes_file.update_node(self);
-                btree.nodes_file.update_node(&sibling);
-                btree.nodes_file.update_node(&parent);
 
-                Ok(())
-        */
+        parent.keys[key_position_in_parent] = key_pool.split_off(2*btree.order)[0];
+
+        smaller_sib.keys = key_pool.split_off(0);
+        smaller_sib.children = children_pool.split_off(0);
+
+        btree.nodes_file.update_node(smaller_sib);
+        btree.nodes_file.update_node(larger_sib);
+        btree.nodes_file.update_node(&parent);
+
+        Ok(())
     }
 
     fn insert_into_sorted(dest: &mut Vec<u64>, new_key: u64) {
@@ -178,6 +180,7 @@ impl Node {
             return;
         }
         if let Ok(_) = self.compensate_insertion(btree) {
+            println!("Compensated ");
             return;
         }
 
@@ -236,14 +239,6 @@ impl BTree {
                 }
                 let mut node = self.nodes_file.get_node(node_id);
                 node.insert(self, key, None, None)
-                /*
-                                let mut root = match self.root_id {
-                                    Some(id) => self.nodes_file.get_node(id),
-                                    None => self.create_new_root(true),
-                                };
-
-                                root.insert(self, key, None, None)
-                */
             }
         }
     }
@@ -460,7 +455,7 @@ mod tests {
             btree.insert(19).unwrap();
             btree.insert(20).unwrap();
 
-            let correct_btree = "";
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3],\"children\":[null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[7,9,11,13],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5,15],\"children\":[0,1,3],\"is_leaf\":false,\"id\":2},{\"parent_node_id\":2,\"keys\":[17,18,19,20],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":3}]";
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
