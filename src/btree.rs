@@ -1,19 +1,21 @@
 use std::path::Path;
 
-use crate::{node::Node, nodes_file::NodesFile};
+use crate::{data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::{self, Record}};
 
 #[derive(PartialEq, Debug)]
 pub struct BTree {
     pub root_id: Option<u64>,
     pub nodes_file: NodesFile,
+    pub data_file: DataFile,
     pub order: usize,
 }
 
 impl BTree {
-    pub fn new(nodes_file_name: &Path, order: usize) -> Self {
+    pub fn new(nodes_file_name: &Path, data_file_name: &Path, order: usize) -> Self {
         Self {
             root_id: None,
             nodes_file: NodesFile::new(nodes_file_name),
+            data_file: DataFile::new(data_file_name),
             order,
         }
     }
@@ -26,7 +28,7 @@ impl BTree {
         self.nodes_file.get_node(id)
     }
 
-    pub fn insert(&mut self, key: u64) -> Result<(), ()> {
+    pub fn insert(&mut self, key: u64, data: &Data) -> Result<(), ()> {
         match self.search(key) {
             Ok(_) => Err(()),
             Err((_, node_id)) => {
@@ -34,7 +36,9 @@ impl BTree {
                     self.create_new_root(true);
                 }
                 let mut node = self.nodes_file.get_node(node_id);
-                node.insert(self, key, None, None)
+                let record = Record::new(key, self.data_file.next_id);
+                self.data_file.write_data(&record, &data);
+                node.insert(self, record, None, None)
             }
         }
     }
@@ -46,12 +50,12 @@ impl BTree {
         Ok(())
     }
 
-    pub fn update(&mut self, old_key: u64, new_key: u64) -> Result<(), ()> {
+    pub fn update(&mut self, old_key: u64, new_key: u64, new_data: &Data) -> Result<(), ()> {
         if let Ok(_) =  self.search(new_key) {
             return Err(())
         }
         self.delete(old_key)?;
-        self.insert(new_key)?;
+        self.insert(new_key, new_data)?;
 
         Ok(())
     }

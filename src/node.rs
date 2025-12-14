@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::btree::BTree;
+use crate::{btree::BTree, data::Data, record::Record};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node {
     pub parent_node_id: Option<u64>,
-    keys: Vec<u64>,
+    keys: Vec<Record>,
     pub children: Vec<Option<u64>>,
     pub is_leaf: bool,
     pub is_deleted: bool,
@@ -29,7 +29,7 @@ impl Node {
     }
 
     pub fn search(&self, btree: &mut BTree, key: u64) -> Result<(u64, u64), (u64, u64)> {
-        match self.keys.binary_search(&key) {
+        match self.keys.binary_search_by(|r| r.key.cmp(&key)) {
             Ok(i) => return Ok((i as u64, self.id)),
             Err(i) => match self.children[i] {
                 Some(child_id) => {
@@ -44,16 +44,16 @@ impl Node {
     fn basic_insert(
         &mut self,
         btree: &mut BTree,
-        new_key: u64,
+        new_record: &Record,
         left_child: Option<u64>,
         right_child: Option<u64>,
     ) {
-        let key_destination: usize = match self.keys.binary_search(&new_key) {
+        let key_destination: usize = match self.keys.binary_search(&new_record) {
             Ok(i) => i,
             Err(i) => i,
         };
 
-        self.keys.insert(key_destination, new_key);
+        self.keys.insert(key_destination, new_record.clone());
         if self.children.len() == 0 {
             self.children.insert(key_destination, left_child);
         }
@@ -69,7 +69,7 @@ impl Node {
         match self.parent_node_id {
             Some(parent_id) => {
                 let parent = btree.nodes_file.get_node(parent_id);
-                println!("parent found: {:?}", parent);
+                //println!("parent found: {:?}", parent);
 
                 let position_in_parent: usize = parent
                     .children
@@ -117,8 +117,8 @@ impl Node {
                     .position(|c| c == &Some(self.id))
                     .unwrap();
 
-                println!("Parent: {:?}", parent);
-                println!("Position in parent: {:?}", position_in_parent);
+                //println!("Parent: {:?}", parent);
+                //println!("Position in parent: {:?}", position_in_parent);
 
                 if position_in_parent > 0 {
                     let sibling_left = btree.nodes_file.get_node(position_in_parent as u64 - 1);
@@ -169,8 +169,8 @@ impl Node {
         key_pool.append(&mut larger_sib.keys.split_off(0));
         children_pool.append(&mut larger_sib.children.split_off(0));
 
-        println!("Key pool: {:?}", key_pool);
-        println!("Children pool: {:?}", children_pool);
+        //println!("Key pool: {:?}", key_pool);
+        //println!("Children pool: {:?}", children_pool);
 
         let split_point = key_pool.len();
 
@@ -197,10 +197,10 @@ impl Node {
     }
 
     fn compensate_deletion(&mut self, btree: &mut BTree) -> Result<(), ()> {
-        println!("Try compensating deletion");
+        //println!("Try compensating deletion");
         let (mut parent, key_position_in_parent, mut sibling) =
             self.get_compensation_partners_deletion(btree)?;
-        println!("Compensating deletion");
+        //println!("Compensating deletion");
 
         self.compensate(btree, &mut parent, key_position_in_parent, &mut sibling)
     }
@@ -225,10 +225,12 @@ impl Node {
         new_node.keys = self.keys.split_off(btree.order + 1);
         new_node.children = self.children.split_off(btree.order + 1);
 
+        let parent_record = self.keys.split_off(btree.order)[0];
+
         parent
             .insert(
                 btree,
-                self.keys.split_off(btree.order)[0],
+                parent_record,
                 Some(self.id),
                 Some(new_node.id),
             )
@@ -264,31 +266,31 @@ impl Node {
     pub fn insert(
         &mut self,
         btree: &mut BTree,
-        new_key: u64,
+        new_record: Record,
         left_child: Option<u64>,
         right_child: Option<u64>,
     ) -> Result<(), ()> {
-        println!("Insert {:?} began", new_key);
+        //println!("Insert {:?} began", new_record.key);
 
-        self.basic_insert(btree, new_key, left_child, right_child);
+        self.basic_insert(btree, &new_record, left_child, right_child);
         btree.nodes_file.update_node(self);
         self.handle_overflow(btree);
 
-        println!("Insert {:?} finished", new_key);
+        //println!("Insert {:?} finished", new_record.key);
         return Ok(());
     }
 
-    pub fn get_smallest_in_subtree(&self, btree: &mut BTree) -> (u64, u64) {
+    pub fn get_smallest_in_subtree(&self, btree: &mut BTree) -> (Record, u64) {
         match self.children[0] {
             Some(child_id) => btree
                 .nodes_file
                 .get_node(child_id)
                 .get_smallest_in_subtree(btree),
-            None => (self.keys[0], self.id),
+            None => (self.keys[0].clone(), self.id),
         }
     }
 
-    pub fn get_largest_in_subtree(&self, btree: &mut BTree) -> (u64, u64) {
+    pub fn get_largest_in_subtree(&self, btree: &mut BTree) -> (Record, u64) {
         match self.children.last().unwrap() {
             Some(child_id) => btree
                 .nodes_file
@@ -299,7 +301,7 @@ impl Node {
     }
 
     fn basic_delete(&mut self, btree: &mut BTree, deleted_key: u64) -> u64 {
-        let key_position: usize = self.keys.binary_search(&deleted_key).unwrap();
+        let key_position: usize = self.keys.binary_search_by(|r| r.key.cmp(&deleted_key)).unwrap();
         match self.is_leaf {
             true => {
                 self.keys.remove(key_position);
@@ -335,14 +337,14 @@ impl Node {
     }
 
     pub fn delete(&mut self, btree: &mut BTree, deleted_key: u64) -> Result<(), ()> {
-        println!("Delete {:?} began", deleted_key);
+        //println!("Delete {:?} began", deleted_key);
 
         let deletion_node_id = self.basic_delete(btree, deleted_key);
         let mut deletion_node = btree.get_node(deletion_node_id);
         btree.nodes_file.update_node(&deletion_node);
         deletion_node.handle_overflow(btree);
 
-        println!("Delete {:?} finished", deleted_key);
+        //println!("Delete {:?} finished", deleted_key);
         return Ok(());
     }
 }

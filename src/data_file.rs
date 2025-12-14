@@ -1,21 +1,21 @@
-use std::{fs::File, io::{BufReader, BufWriter, Seek}, path::Path};
+use std::{error::Error, fs::File, io::{Read, Seek, SeekFrom, Write}, path::Path};
 
-use crate::node::Node;
+use crate::{consts::{MAX_RECORD_LENGTH, PADDING_CHAR}, data::Data, record::Record};
 
 #[derive(Debug)]
-pub struct NodesFile {
+pub struct DataFile {
     file: File,
     pub next_id: u64,
 }
 
-impl PartialEq for NodesFile {
+impl PartialEq for DataFile {
     fn eq(&self, other: &Self) -> bool {
         //self.file == other.file
         true
     }
 }
 
-impl NodesFile {
+impl DataFile {
     pub fn new(file_name: &Path) -> Self {
         Self {
             file: File::options()
@@ -29,6 +29,37 @@ impl NodesFile {
         }
     }
 
+    pub fn get_data(&mut self, record: &Record) -> Result<Data, Box<dyn Error>>{
+        let mut buf = [PADDING_CHAR; MAX_RECORD_LENGTH];
+
+        self.file.seek(SeekFrom::Start(record.data_address()))?;
+
+        if let Ok(_) = self.file.read_exact(&mut buf) {
+            Ok(Data::try_from(buf.as_slice())?)
+        } else {
+            return Err("Error reading data from file".into());
+        }
+    }
+
+    pub fn write_data(&mut self, record: &Record, data: &Data) -> Result<(), Box<dyn Error>>{
+        self.file.seek(SeekFrom::Start(record.data_address()))?;
+
+        self.file.write(Vec::from(data).as_slice())?;
+
+        self.next_id+=1;
+        Ok(())
+    }
+
+    pub fn update_data(&mut self, record: &Record, data: &Data) -> Result<(), Box<dyn Error>>{
+        self.file.seek(SeekFrom::Start(record.data_address()))?;
+
+        self.file.write(Vec::from(data).as_slice())?;
+
+        Ok(())
+    }
+
+
+    /*
     pub fn get_node(&mut self, id: u64) -> Node {
         let reader = BufReader::new(self.file.try_clone().unwrap());
 
@@ -47,7 +78,7 @@ impl NodesFile {
         nodes = serde_json::from_reader(reader).unwrap();
         nodes[node.id as usize] = node.clone();
 
-        //println!("{:?}", nodes);
+        println!("{:?}", nodes);
 
         self.file.rewind().unwrap();
         self.file.set_len(0).unwrap();
@@ -75,6 +106,6 @@ impl NodesFile {
 
         self.file.sync_data().unwrap();
         self.file.rewind().unwrap();
-    }
+    }*/
 }
 
