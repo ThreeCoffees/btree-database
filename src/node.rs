@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{btree::BTree, data::Data, record::Record};
+use crate::{btree::BTree, record::Record};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node {
@@ -28,9 +28,9 @@ impl Node {
         self.keys.len()
     }
 
-    pub fn search(&self, btree: &mut BTree, key: u64) -> Result<(u64, u64), (u64, u64)> {
+    pub fn search(&self, btree: &mut BTree, key: u64) -> Result<(Record, u64), (u64, u64)> {
         match self.keys.binary_search_by(|r| r.key.cmp(&key)) {
-            Ok(i) => return Ok((i as u64, self.id)),
+            Ok(i) => return Ok((self.keys[i], self.id)),
             Err(i) => match self.children[i] {
                 Some(child_id) => {
                     let child = btree.nodes_file.get_node(child_id);

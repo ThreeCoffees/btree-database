@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::{data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::{self, Record}};
+use crate::{data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::Record};
 
 #[derive(PartialEq, Debug)]
 pub struct BTree {
@@ -28,7 +28,7 @@ impl BTree {
         self.nodes_file.get_node(id)
     }
 
-    pub fn insert(&mut self, key: u64, data: &Data) -> Result<(), ()> {
+    pub fn insert(&mut self, key: u64, data: Option<Data>) -> Result<(), ()> {
         match self.search(key) {
             Ok(_) => Err(()),
             Err((_, node_id)) => {
@@ -37,7 +37,9 @@ impl BTree {
                 }
                 let mut node = self.nodes_file.get_node(node_id);
                 let record = Record::new(key, self.data_file.next_id);
-                self.data_file.write_data(&record, &data);
+                if let Some(data) = data {
+                    self.data_file.write_data(&record, &data).unwrap();
+                }
                 node.insert(self, record, None, None)
             }
         }
@@ -50,14 +52,25 @@ impl BTree {
         Ok(())
     }
 
-    pub fn update(&mut self, old_key: u64, new_key: u64, new_data: &Data) -> Result<(), ()> {
-        if let Ok(_) =  self.search(new_key) {
-            return Err(())
-        }
-        self.delete(old_key)?;
-        self.insert(new_key, new_data)?;
+    pub fn update(&mut self, old_key: u64, new_key: u64, new_data: Option<Data>) -> Result<(), ()> {
+        if let Ok((record, _)) = self.search(old_key) {
+            if let Ok(_) = self.search(new_key)
+                && old_key != new_key
+            {
+                return Err(());
+            }
 
-        Ok(())
+            if let Some(data) = new_data {
+                self.data_file.write_data(&record, &data).unwrap();
+            }
+
+            self.delete(old_key)?;
+            self.insert(new_key, None)?;
+
+            Ok(())
+        } else {
+            Err(())
+        }
     }
 
     pub fn create_new_root(&mut self, is_leaf: bool) -> Node {
@@ -67,7 +80,7 @@ impl BTree {
         root
     }
 
-    pub fn search(&mut self, key: u64) -> Result<(u64, u64), (u64, u64)> {
+    pub fn search(&mut self, key: u64) -> Result<(Record, u64), (u64, u64)> {
         match self.root_id {
             Some(id) => self.get_node(id).search(self, key),
             None => Err((0, 0)),

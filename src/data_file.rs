@@ -57,55 +57,5 @@ impl DataFile {
 
         Ok(())
     }
-
-
-    /*
-    pub fn get_node(&mut self, id: u64) -> Node {
-        let reader = BufReader::new(self.file.try_clone().unwrap());
-
-        let nodes: Vec<Node> = serde_json::from_reader(reader).unwrap();
-
-        self.file.rewind().unwrap();
-
-        nodes[id as usize].clone()
-    }
-
-    pub fn update_node(&mut self, node: &Node) {
-        let mut nodes: Vec<Node> = vec![];
-
-        let reader = BufReader::new(self.file.try_clone().unwrap());
-
-        nodes = serde_json::from_reader(reader).unwrap();
-        nodes[node.id as usize] = node.clone();
-
-        println!("{:?}", nodes);
-
-        self.file.rewind().unwrap();
-        self.file.set_len(0).unwrap();
-        let writer = BufWriter::new(self.file.try_clone().unwrap());
-        serde_json::to_writer(writer, &nodes).unwrap();
-
-        self.file.sync_data().unwrap();
-        self.file.rewind().unwrap();
-    }
-
-    pub fn create_node(&mut self, node: &Node) {
-        let mut nodes: Vec<Node> = vec![];
-
-        let reader = BufReader::new(self.file.try_clone().unwrap());
-
-        nodes = serde_json::from_reader(reader).unwrap_or(vec![]);
-        nodes.push(node.clone());
-        //println!("{:?}", nodes);
-        self.next_id += 1;
-
-        self.file.rewind().unwrap();
-        self.file.set_len(0).unwrap();
-        let writer = BufWriter::new(self.file.try_clone().unwrap());
-        serde_json::to_writer(writer, &nodes).unwrap();
-
-        self.file.sync_data().unwrap();
-        self.file.rewind().unwrap();
-    }*/
 }
 
