@@ -47,7 +47,7 @@ impl NodesFile {
         nodes = serde_json::from_reader(reader).unwrap();
         nodes[node.id as usize] = node.clone();
 
-        println!("{:?}", nodes);
+        //println!("{:?}", nodes);
 
         self.file.rewind().unwrap();
         self.file.set_len(0).unwrap();
@@ -65,7 +65,7 @@ impl NodesFile {
 
         nodes = serde_json::from_reader(reader).unwrap_or(vec![]);
         nodes.push(node.clone());
-        println!("{:?}", nodes);
+        //println!("{:?}", nodes);
         self.next_id += 1;
 
         self.file.rewind().unwrap();

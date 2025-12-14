@@ -1,10 +1,10 @@
-use std::{cmp::min, path::Path};
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{btree, nodes_file::NodesFile};
+use crate::nodes_file::NodesFile;
 
-const D: usize = 3;
+//const D: usize = 3;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Node {
@@ -21,85 +21,15 @@ pub enum Direction {
 }
 
 impl Node {
-    fn new(is_leaf: bool, id: u64) -> Self {
+    fn new(is_leaf: bool, id: u64, order: usize) -> Self {
         Self {
             parent_node_id: None,
-            keys: Vec::with_capacity(D * 2 + 1),
-            children: Vec::with_capacity(D * 2 + 2),
+            keys: Vec::with_capacity(order * 2 + 1),
+            children: Vec::with_capacity(order * 2 + 2),
             is_leaf,
             id,
         }
     }
-
-    /*
-    fn split_insert(&mut self, btree: &mut BTree, new_key: u64) {
-        let mut new_node = Node::new(self.is_leaf, btree.get_next_id());
-        btree.nodes_file.create_node(&new_node);
-
-        self.keys.len() = D as u64;
-        new_node.keys.len() = D as u64;
-
-        let key_destination: usize = match self.keys.binary_search(&new_key) {
-            Ok(i) => i,
-            Err(i) => i,
-        };
-
-        let parent_key: u64 = if key_destination < D {
-            //split with middle_left pushed to the parent
-            new_node.keys = self.keys.split_off(D);
-            let key = self.keys.split_off(D - 1)[0];
-            new_node.children = self.children.split_off(D);
-
-            self.non_split_insert(btree, new_key);
-
-            key
-        } else if key_destination > D {
-            //split with middle_right pushed to the parent
-            new_node.keys = self.keys.split_off(D + 1);
-            new_node.children = self.children.split_off(D + 1);
-
-            new_node.non_split_insert(btree, new_key);
-
-            self.keys.split_off(D)[0]
-        } else {
-            //split with new_key pushed to the parent
-            new_node.keys = self.keys.split_off(D);
-            new_node.children = self.children.split_off(D);
-
-            new_key
-        };
-
-        btree.nodes_file.update_node(&new_node);
-        btree.nodes_file.update_node(&self);
-
-        // push to the parent
-        let mut parent_node: Node = match self.parent_node_id {
-            Some(id) => btree.get_node(id),
-            None => btree.create_new_root(false),
-        };
-
-        parent_node.insert(btree, parent_key);
-
-        todo!()
-    }*/
-
-    /*fn split_child(&mut self, child_idx: usize) {
-        let child: &mut Node = self.children[child_idx].as_mut().unwrap();
-        let mut new_child = Node::new(child.is_leaf);
-
-        child.keys.len() = D as u64;
-        new_child.keys.len() = D as u64;
-
-        new_child.keys = child.keys.split_off(D + 1);
-        let split_key = child.keys.split_off(D as usize)[0];
-
-        new_child.children = child.children.split_off(D + 1);
-
-        self.keys.insert(child_idx, split_key);
-        self.children.insert(child_idx + 1, Some(new_child));
-
-        self.keys.len() += 1;
-    }*/
 
     pub fn search(&self, btree: &mut BTree, key: u64) -> Result<(u64, u64), (u64, u64)> {
         match self.keys.binary_search(&key) {
@@ -127,7 +57,9 @@ impl Node {
         };
 
         self.keys.insert(key_destination, new_key);
-        self.children.insert(key_destination, left_child);
+        if self.children.len() == 0 {
+            self.children.insert(key_destination, left_child);
+        }
         self.children.insert(key_destination + 1, right_child);
 
         btree.nodes_file.update_node(self);
@@ -147,11 +79,11 @@ impl Node {
 
                 if position_in_parent > 0 {
                     let sibling_left = btree.nodes_file.get_node(position_in_parent as u64 - 1);
-                    if sibling_left.keys.len() == 2 * D {
-                        if position_in_parent < 2 * D {
+                    if sibling_left.keys.len() == 2 * btree.order {
+                        if position_in_parent < 2 * btree.order {
                             let sibling_right =
                                 btree.nodes_file.get_node(position_in_parent as u64 + 1);
-                            if sibling_right.keys.len() == 2 * D {
+                            if sibling_right.keys.len() == 2 * btree.order {
                                 return Err(());
                             }
                             return Ok((parent, position_in_parent, sibling_left));
@@ -161,7 +93,7 @@ impl Node {
                     return Ok((parent, position_in_parent - 1, sibling_left));
                 } else {
                     let sibling = btree.nodes_file.get_node(position_in_parent as u64 + 1);
-                    if sibling.keys.len() == 2 * D {
+                    if sibling.keys.len() == 2 * btree.order {
                         return Err(());
                     }
                     return Ok((parent, 0, sibling));
@@ -212,68 +144,34 @@ impl Node {
     }
 
     fn split(&mut self, btree: &mut BTree) {
-        let mut new_node = Node::new(self.is_leaf, btree.nodes_file.next_id);
+        let mut new_node = Node::new(self.is_leaf, btree.nodes_file.next_id, btree.order);
         btree.nodes_file.create_node(&new_node);
 
         let mut parent = match self.parent_node_id {
             Some(parent_id) => btree.nodes_file.get_node(parent_id),
-            None => todo!(),
+            None => btree.create_new_root(false),
         };
 
-        new_node.keys = self.keys.split_off(D + 1);
-        new_node.children = self.children.split_off(D + 1);
+        new_node.keys = self.keys.split_off(btree.order + 1);
+        new_node.children = self.children.split_off(btree.order + 1);
 
-        /*let position_in_parent = parent
-            .children
-            .iter()
-            .position(|&c| {
-                if let Some(c) = c {
-                    return c == self.id;
-                }
-                return false;
-            })
-            .unwrap();
-*/
-        parent.basic_insert(btree, self.keys.split_off(D)[0], Some(self.id), Some(new_node.id));
+        parent.insert(btree, self.keys.split_off(btree.order)[0], Some(self.id), Some(new_node.id)).unwrap();
 
-        /*
-        let mut key_pool = self.keys.split_off(0);
-        Self::insert_into_sorted(&mut key_pool, new_key);
-        let mut children_pool = self.children.split_off(0);
+        self.parent_node_id = Some(parent.id);
+        new_node.parent_node_id = Some(parent.id);
 
-        let split_point = key_pool.len() / 2;
-
-        new_node.keys = key_pool.split_off(split_point + 1);
-        new_node.children = children_pool.split_off(split_point);
-        let parent_key = key_pool.split_off(split_point)[0];
-        self.keys = key_pool;
-        self.children = children_pool;
-
-        match self.parent_node_id {
-            Some(parent_id) => {
-                btree
-                    .nodes_file
-                    .get_node(parent_id)
-                    .insert(btree, parent_key)
-                    .unwrap();
-            }
-            None => {
-                btree
-                    .create_new_root(false)
-                    .insert(btree, parent_key)
-                    .unwrap();
-            }
-        }*/
+        btree.nodes_file.update_node(&new_node);
+        btree.nodes_file.update_node(self);
     }
 
     fn handle_overflow(&mut self, btree: &mut BTree) {
-        if self.keys.len() <= 2 * D {
+        if self.keys.len() <= 2 * btree.order {
             return;
         }
 
-        if let Ok(_) = self.compensate_insertion(btree) {
+        /*if let Ok(_) = self.compensate_insertion(btree) {
             return;
-        }
+        }*/
 
         self.split(btree);
     }
@@ -286,6 +184,7 @@ impl Node {
         right_child: Option<u64>,
     ) -> Result<(), ()> {
         self.basic_insert(btree, new_key, left_child, right_child);
+        btree.nodes_file.update_node(self);
         self.handle_overflow(btree);
         return Ok(());
     }
@@ -295,13 +194,15 @@ impl Node {
 pub struct BTree {
     root_id: Option<u64>,
     nodes_file: NodesFile,
+    order: usize,
 }
 
 impl BTree {
-    pub fn new(nodes_file_name: &Path) -> Self {
+    pub fn new(nodes_file_name: &Path, order: usize) -> Self {
         Self {
             root_id: None,
             nodes_file: NodesFile::new(nodes_file_name),
+            order,
         }
     }
 
@@ -328,7 +229,7 @@ impl BTree {
     }
 
     pub fn create_new_root(&mut self, is_leaf: bool) -> Node {
-        let mut root = Node::new(is_leaf, self.get_next_id());
+        let mut root = Node::new(is_leaf, self.get_next_id(), self.order);
         self.nodes_file.create_node(&root);
         self.root_id = Some(root.id);
         root
@@ -340,23 +241,6 @@ impl BTree {
             None => Err((0, 0)),
         }
     }
-    //let root = self.nodes[self.root_id as usize].borrow_mut();
-    /*
-    match self.root.as_mut() {
-        Some(root) => {
-            if root.keys.len() == 2 * D as u64 {
-                let mut new_root = Node::new(false);
-                mem::swap(root, &mut new_root);
-                root.children.push(Some(new_root));
-                root.split_child(0);
-            }
-            root.insert_non_full(key);
-        }
-        None => {
-            self.root = Some(Node::new(true));
-            self.root.as_mut().unwrap().insert_non_full(key);
-        }
-    }*/
 }
 
 #[cfg(test)]
@@ -371,7 +255,7 @@ mod tests {
         #[test]
         fn search_empty() {
             let path = Path::new("test_files/search_empty.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
             let result = btree.search(1);
 
@@ -381,11 +265,11 @@ mod tests {
         #[test]
         fn search_root_find() {
             let path = Path::new("test_files/search_empty.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
-            btree.insert(2);
-            btree.insert(3);
+            btree.insert(1).unwrap();
+            btree.insert(2).unwrap();
+            btree.insert(3).unwrap();
 
             let result = btree.search(2);
 
@@ -395,11 +279,11 @@ mod tests {
         #[test]
         fn search_root_not_found() {
             let path = Path::new("test_files/search_empty.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
-            btree.insert(3);
-            btree.insert(4);
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(4).unwrap();
 
             let result = btree.search(2);
 
@@ -412,11 +296,25 @@ mod tests {
         #[test]
         fn insert_into_empty() {
             let path = Path::new("test_files/insert_into_empty.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
+            btree.insert(1).unwrap();
 
-            let correct_btree = "[{\"keys.len()\":1,\"parent_node_id\":null,\"keys\":[1],\"children\":[null,null],\"is_leaf\":true,\"id\":0}]".to_string() ;
+            let correct_btree = "[{\"parent_node_id\":null,\"keys\":[1],\"children\":[null,null],\"is_leaf\":true,\"id\":0}]".to_string() ;
+            let read_btree = fs::read_to_string(path).unwrap();
+
+            assert_eq!(read_btree, correct_btree);
+        }
+
+        #[test]
+        fn insert_existing() {
+            let path = Path::new("test_files/insert_existing.json");
+            let mut btree = BTree::new(&path, 3);
+
+            btree.insert(1).unwrap();
+            assert!(btree.insert(1).is_err());
+
+            let correct_btree = "[{\"parent_node_id\":null,\"keys\":[1],\"children\":[null,null],\"is_leaf\":true,\"id\":0}]".to_string() ;
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
@@ -425,14 +323,14 @@ mod tests {
         #[test]
         fn insert_into_existing_root() {
             let path = Path::new("test_files/insert_into_existing_root.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
-            btree.insert(3);
-            btree.insert(0);
-            btree.insert(2);
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(0).unwrap();
+            btree.insert(2).unwrap();
 
-            let correct_btree = "[{\"keys.len()\":4,\"parent_node_id\":null,\"keys\":[0,1,2,3],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":0}]".to_string() ;
+            let correct_btree = "[{\"parent_node_id\":null,\"keys\":[0,1,2,3],\"children\":[null,null,null,null,null],\"is_leaf\":true,\"id\":0}]".to_string() ;
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
@@ -441,18 +339,18 @@ mod tests {
         #[test]
         fn insert_into_full_root_left() {
             let path = Path::new("test_files/insert_into_full_root_left.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
-            btree.insert(3);
-            btree.insert(5);
-            btree.insert(7);
-            btree.insert(9);
-            btree.insert(11);
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(7).unwrap();
+            btree.insert(9).unwrap();
+            btree.insert(11).unwrap();
 
-            btree.insert(2);
+            btree.insert(2).unwrap();
 
-            let correct_btree = "";
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,2,3],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[7,9,11],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[5],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
@@ -461,18 +359,18 @@ mod tests {
         #[test]
         fn insert_into_full_root_right() {
             let path = Path::new("test_files/insert_into_full_root_right.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
-            btree.insert(3);
-            btree.insert(5);
-            btree.insert(7);
-            btree.insert(9);
-            btree.insert(11);
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(7).unwrap();
+            btree.insert(9).unwrap();
+            btree.insert(11).unwrap();
 
-            btree.insert(10);
+            btree.insert(10).unwrap();
 
-            let correct_btree = "";
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3,5],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[9,10,11],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[7],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
@@ -481,90 +379,47 @@ mod tests {
         #[test]
         fn insert_into_full_root_middle() {
             let path = Path::new("test_files/insert_into_full_root_middle.json");
-            let mut btree = BTree::new(&path);
+            let mut btree = BTree::new(&path, 3);
 
-            btree.insert(1);
-            btree.insert(3);
-            btree.insert(5);
-            btree.insert(7);
-            btree.insert(9);
-            btree.insert(11);
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(7).unwrap();
+            btree.insert(9).unwrap();
+            btree.insert(11).unwrap();
 
-            btree.insert(6);
+            btree.insert(6).unwrap();
 
-            let correct_btree = "";
+            let correct_btree = "[{\"parent_node_id\":2,\"keys\":[1,3,5],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":0},{\"parent_node_id\":2,\"keys\":[7,9,11],\"children\":[null,null,null,null],\"is_leaf\":true,\"id\":1},{\"parent_node_id\":null,\"keys\":[6],\"children\":[0,1],\"is_leaf\":false,\"id\":2}]";
             let read_btree = fs::read_to_string(path).unwrap();
 
             assert_eq!(read_btree, correct_btree);
         }
 
         #[test]
-        fn insert_into_full_leaf() {}
-    }
+        fn insert_into_full_leaf() {
+            let path = Path::new("test_files/insert_into_full_leaf.json");
+            let mut btree = BTree::new(&path, 2);
 
-    #[test]
-    fn split_child() {
-        /*
-                //setup
-                let node1 = Node {
-                    keys.len(): 7,
-                    keys: vec![0, 1, 2, 3, 4, 5, 6],
-                    children: vec![None; 8],
-                    is_leaf: true,
-                };
-                let node2 = Node {
-                    keys.len(): 7,
-                    keys: vec![8, 9, 10, 11, 12, 13, 14],
-                    children: vec![None; 8],
-                    is_leaf: true,
-                };
+            btree.insert(1).unwrap();
+            btree.insert(3).unwrap();
+            btree.insert(5).unwrap();
+            btree.insert(7).unwrap();
 
-                let mut parent_node = Node::new(false);
-                parent_node.keys.len() = 1;
-                parent_node.keys.push(7);
-                parent_node.children.push(Some(node1));
-                parent_node.children.push(Some(node2));
+            btree.insert(9).unwrap();
+            btree.insert(11).unwrap();
+            btree.insert(13).unwrap();
+            btree.insert(15).unwrap();
 
-                // action
+            btree.insert(17).unwrap();
+            btree.insert(18).unwrap();
+            btree.insert(19).unwrap();
+            btree.insert(20).unwrap();
 
-                parent_node.split_child(0);
-                parent_node.split_child(2);
+            let correct_btree = "";
+            let read_btree = fs::read_to_string(path).unwrap();
 
-                // assert
-
-                let split1 = Node {
-                    keys.len(): 3,
-                    keys: vec![0, 1, 2],
-                    children: vec![None, None, None, None],
-                    is_leaf: true,
-                };
-                let split2 = Node {
-                    keys.len(): 3,
-                    keys: vec![4, 5, 6],
-                    children: vec![None, None, None, None],
-                    is_leaf: true,
-                };
-                let split3 = Node {
-                    keys.len(): 3,
-                    keys: vec![8, 9, 10],
-                    children: vec![None, None, None, None],
-                    is_leaf: true,
-                };
-                let split4 = Node {
-                    keys.len(): 3,
-                    keys: vec![12, 13, 14],
-                    children: vec![None, None, None, None],
-                    is_leaf: true,
-                };
-
-                let correct_parent_node = Node {
-                    keys.len(): 3,
-                    keys: vec![3, 7, 11],
-                    children: vec![Some(split1), Some(split2), Some(split3), Some(split4)],
-                    is_leaf: false,
-                };
-
-                assert_eq!(parent_node, correct_parent_node);
-        */
+            assert_eq!(read_btree, correct_btree);
+        }
     }
 }
