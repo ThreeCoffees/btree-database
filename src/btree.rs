@@ -1,6 +1,8 @@
 use std::path::Path;
 
-use crate::{data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::Record};
+use crate::{
+    btree, data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::Record,
+};
 
 #[derive(PartialEq, Debug)]
 pub struct BTree {
@@ -14,7 +16,7 @@ impl BTree {
     pub fn new(nodes_file_name: &Path, data_file_name: &Path, order: usize) -> Self {
         Self {
             root_id: None,
-            nodes_file: NodesFile::new(nodes_file_name),
+            nodes_file: NodesFile::new(nodes_file_name, order),
             data_file: DataFile::new(data_file_name),
             order,
         }
@@ -26,6 +28,14 @@ impl BTree {
 
     pub fn get_node(&mut self, id: u64) -> Node {
         self.nodes_file.get_node(id)
+    }
+
+    pub fn update_node(&mut self, node: &Node) {
+        self.nodes_file.update_node(node);
+    }
+
+    pub fn create_node(&mut self, node: &Node) {
+        self.nodes_file.create_node(node);
     }
 
     pub fn insert(&mut self, key: u64, data: Option<Data>) -> Result<(), ()> {
@@ -50,6 +60,24 @@ impl BTree {
 
         self.get_node(node_id).delete(self, key)?;
         Ok(())
+    }
+
+    pub fn print(&mut self) {
+        println!("\n=== B Tree ===");
+        println!("Order: {}", self.order);
+        println!("Nodes file: {:?}", self.nodes_file.file);
+        println!("Data file: {:?}", self.data_file.file);
+        println!("--- Nodes ---");
+        if let Some(root_id) = self.root_id {
+            let root = self.get_node(root_id);
+            root.print(self, 0);
+        }
+        println!("--- Records ---");
+        if let Some(root_id) = self.root_id {
+            let root = self.get_node(root_id);
+            root.print_in_order(self);
+        }
+        println!("=== === === ===");
     }
 
     pub fn update(&mut self, old_key: u64, new_key: u64, new_data: Option<Data>) -> Result<(), ()> {

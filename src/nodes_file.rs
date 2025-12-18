@@ -1,22 +1,30 @@
-use std::{fs::File, io::{BufReader, BufWriter, Seek}, path::Path};
+use std::{
+    fs::File,
+    io::{BufReader, BufWriter, Read, Seek, Write},
+    path::Path,
+};
 
-use crate::node::Node;
+use crate::{btree::BTree, node::Node};
 
 #[derive(Debug)]
 pub struct NodesFile {
-    file: File,
+    pub file: File,
     pub next_id: u64,
+    pub order: usize,
+    pub node_byte_size: usize,
+    pub node_buffer: Vec<u8>,
 }
 
 impl PartialEq for NodesFile {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _: &Self) -> bool {
         //self.file == other.file
         true
     }
 }
 
 impl NodesFile {
-    pub fn new(file_name: &Path) -> Self {
+    pub fn new(file_name: &Path, order: usize) -> Self {
+        let node_byte_size = Node::byte_size(order);
         Self {
             file: File::options()
                 .create(true)
@@ -26,55 +34,35 @@ impl NodesFile {
                 .open(file_name)
                 .unwrap(),
             next_id: 0,
+            order,
+            node_byte_size,
+            node_buffer: vec![0; node_byte_size],
         }
     }
 
     pub fn get_node(&mut self, id: u64) -> Node {
-        let reader = BufReader::new(self.file.try_clone().unwrap());
+        self.file
+            .seek(std::io::SeekFrom::Start(id * self.node_byte_size as u64)).unwrap();
+        self.file.read_exact(self.node_buffer.as_mut_slice()).unwrap();
 
-        let nodes: Vec<Node> = serde_json::from_reader(reader).unwrap();
-
-        self.file.rewind().unwrap();
-
-        nodes[id as usize].clone()
+        Node::from_bytes(self.node_buffer.as_slice(), self.order)
     }
 
     pub fn update_node(&mut self, node: &Node) {
-        let mut nodes: Vec<Node> = vec![];
-
-        let reader = BufReader::new(self.file.try_clone().unwrap());
-
-        nodes = serde_json::from_reader(reader).unwrap();
-        nodes[node.id as usize] = node.clone();
-
-        //println!("{:?}", nodes);
-
-        self.file.rewind().unwrap();
-        self.file.set_len(0).unwrap();
-        let writer = BufWriter::new(self.file.try_clone().unwrap());
-        serde_json::to_writer(writer, &nodes).unwrap();
-
+        self.file
+            .seek(std::io::SeekFrom::Start(node.id * self.node_byte_size as u64)).unwrap();
+        self.node_buffer = node.to_bytes(self.order);
+        self.file.write(self.node_buffer.as_slice()).unwrap();
         self.file.sync_data().unwrap();
-        self.file.rewind().unwrap();
     }
 
     pub fn create_node(&mut self, node: &Node) {
-        let mut nodes: Vec<Node> = vec![];
-
-        let reader = BufReader::new(self.file.try_clone().unwrap());
-
-        nodes = serde_json::from_reader(reader).unwrap_or(vec![]);
-        nodes.push(node.clone());
-        //println!("{:?}", nodes);
+        self.file
+            .seek(std::io::SeekFrom::End(0)).unwrap();
+        self.node_buffer = node.to_bytes(self.order);
         self.next_id += 1;
 
-        self.file.rewind().unwrap();
-        self.file.set_len(0).unwrap();
-        let writer = BufWriter::new(self.file.try_clone().unwrap());
-        serde_json::to_writer(writer, &nodes).unwrap();
-
+        self.file.write(self.node_buffer.as_slice()).unwrap();
         self.file.sync_data().unwrap();
-        self.file.rewind().unwrap();
     }
 }
-

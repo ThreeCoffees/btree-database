@@ -4,7 +4,7 @@ use crate::{consts::{MAX_RECORD_LENGTH, PADDING_CHAR}, data::Data, record::Recor
 
 #[derive(Debug)]
 pub struct DataFile {
-    file: File,
+    pub file: File,
     pub next_id: u64,
 }
 
