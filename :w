@@ -42,34 +42,27 @@ impl NodesFile {
 
     pub fn get_node(&mut self, id: u64) -> Node {
         self.file
-            .seek(std::io::SeekFrom::Start(id * self.node_byte_size as u64)).unwrap();
+            .seek(std::io::SeekFrom::Start(id * self.node_byte_size as u64));
         self.file.read_exact(self.node_buffer.as_mut_slice()).unwrap();
-        let node = Node::from_bytes(self.node_buffer.as_slice(), self.order);
-        //println!("get: {:?}", node);
-        //println!("get: {:?}", self.node_buffer);
 
-        node
+        Node::from_bytes(self.node_buffer.as_slice(), self.order)
     }
 
-    pub fn update_node(&mut self, node: &Node) {
+    pub fn update_node(&mut self, node: &Node, btree: &BTree) {
         self.file
-            .seek(std::io::SeekFrom::Start(node.id * self.node_byte_size as u64)).unwrap();
+            .seek(std::io::SeekFrom::Start(node.id * self.node_byte_size as u64));
         self.node_buffer = node.to_bytes(self.order);
-        //println!("update: {:?}", node);
-        //println!("update: {:?}", self.node_buffer);
         self.file.write(self.node_buffer.as_slice()).unwrap();
-        self.file.sync_data().unwrap();
+        self.file.sync_data();
     }
 
-    pub fn create_node(&mut self, node: &Node) {
+    pub fn create_node(&mut self, node: &Node, btree: &BTree) {
         self.file
-            .seek(std::io::SeekFrom::Start(self.next_id * self.node_byte_size as u64)).unwrap();
-        self.node_buffer = node.to_bytes(self.order);
-        //println!("create: {:?}", node);
-        //println!("create: {:?}", self.node_buffer);
+            .seek(std::io::SeekFrom::End(0));
+        self.node_buffer = node.to_bytes(btree);
         self.next_id += 1;
 
         self.file.write(self.node_buffer.as_slice()).unwrap();
-        self.file.sync_data().unwrap();
+        self.file.sync_data();
     }
 }

@@ -1,4 +1,4 @@
-use std::{array::TryFromSliceError, error::Error, fmt::format};
+use std::{array::TryFromSliceError, error::Error, fmt::format, u64};
 
 use serde::{Deserialize, Serialize};
 
@@ -74,7 +74,6 @@ impl Node {
         match self.parent_node_id {
             Some(parent_id) => {
                 let parent = btree.get_node(parent_id);
-                //println!("parent found: {:?}", parent);
 
                 let position_in_parent: usize = parent
                     .children
@@ -120,9 +119,6 @@ impl Node {
                     .iter()
                     .position(|c| c == &Some(self.id))
                     .unwrap();
-
-                //println!("Parent: {:?}", parent);
-                //println!("Position in parent: {:?}", position_in_parent);
 
                 if position_in_parent > 0 {
                     let sibling_left =
@@ -214,10 +210,8 @@ impl Node {
     }
 
     fn compensate_deletion(&mut self, btree: &mut BTree) -> Result<(), ()> {
-        //println!("Try compensating deletion");
         let (mut parent, key_position_in_parent, mut sibling) =
             self.get_compensation_partners_deletion(btree)?;
-        //println!("Compensating deletion");
 
         self.compensate(btree, &mut parent, key_position_in_parent, &mut sibling)
     }
@@ -258,13 +252,9 @@ impl Node {
         btree.update_node(self);
         btree.update_node(&parent);
 
-        //println!("{} {}", self.id, new_node.id);
         parent
             .insert(btree, parent_record, Some(self.id), Some(new_node.id))
             .unwrap();
-        //println!("{} {}", self.id, new_node.id);
-        //btree.nodes_file.update_node(&new_node);
-        //btree.nodes_file.update_node(self);
     }
 
     pub fn keys_string_pretty(&self) -> String {
@@ -278,8 +268,10 @@ impl Node {
 
     pub fn print(&self, btree: &mut BTree, ident: u8) {
         println!(
-            "|{} |id: {} keys: {:?}",
+            "{}{}| id: {} keys: {:?}",
             vec!['-'; 2 * ident as usize].iter().collect::<String>(),
+            self.parent_node_id
+                .map_or(String::from("X"), |id| { id.to_string() }),
             self.id,
             self.keys_string_pretty(),
         );
@@ -293,13 +285,10 @@ impl Node {
     fn handle_overflow(&mut self, btree: &mut BTree) {
         if self.keys.len() > 2 * btree.order {
             if let Ok(_) = self.compensate_insertion(btree) {
-                //println!("Compensating");
                 return;
             }
 
-            //println!("Splitting: {:?}", self.id);
             self.split(btree);
-            //println!("Finished Splitting: {:?}", self.id);
         } else if self.keys.len() < btree.order && self.id != btree.root_id.unwrap() {
             if let Ok(_) = self.compensate_deletion(btree) {
                 return;
@@ -403,14 +392,8 @@ impl Node {
         left_child: Option<u64>,
         right_child: Option<u64>,
     ) -> Result<(), ()> {
-        //println!("Insert {:?} began", new_record.key);
-        //println!("During inserting");
-
         self.basic_insert(btree, &new_record, left_child, right_child);
         self.handle_overflow(btree);
-        //println!("After inserting");
-
-        //println!("Insert {:?} finished", new_record.key);
         return Ok(());
     }
 
@@ -470,19 +453,16 @@ impl Node {
     }
 
     pub fn delete(&mut self, btree: &mut BTree, deleted_key: u64) -> Result<(), ()> {
-        //println!("Delete {:?} began", deleted_key);
-
         let deletion_node_id = self.basic_delete(btree, deleted_key);
         let mut deletion_node = btree.get_node(deletion_node_id);
         btree.update_node(&deletion_node);
         deletion_node.handle_overflow(btree);
 
-        //println!("Delete {:?} finished", deleted_key);
         return Ok(());
     }
 
     pub fn byte_size(order: usize) -> usize {
-        1 + 8 + 8 + 8 + order * RECORD_SIZE + (order + 1) * 8
+        1 + 8 + 8 + 8 + (2 * order + 1) * RECORD_SIZE + (2 * order + 2) * 8
     }
 
     // 1 - flags: is_leaf, is_deleted, has_parent
@@ -493,17 +473,16 @@ impl Node {
     // MAX_KEY_COUNT * KEY_SIZE - keys
     // (MAX_KEY_COUNT + 1) * KEY_SIZE - children
     pub fn to_bytes(&self, order: usize) -> Vec<u8> {
-        let mut bytes: Vec<u8> =
-            Vec::with_capacity(Self::byte_size(order));
+        let mut bytes: Vec<u8> = Vec::with_capacity(Self::byte_size(order));
 
-        let max_key_count = order * 2;
-        let max_child_count = order * 2 + 1;
+        let max_key_count = order * 2 + 1;
+        let max_child_count = max_key_count + 1;
 
         let flags: u8 = [self.is_leaf, self.is_deleted, self.parent_node_id.is_some()]
             .iter()
             .enumerate()
             .map(|f| if *f.1 { 1 << f.0 } else { 0 })
-            .reduce(|acc, e| acc & e)
+            .reduce(|acc, e| acc | e)
             .unwrap();
 
         bytes.push(flags);
@@ -542,7 +521,7 @@ impl Node {
 
         let key_count = u64::from_le_bytes(bytes[17..25].try_into().unwrap());
 
-        let max_key_count = order * 2;
+        let max_key_count = order * 2 + 1;
 
         let record_bytes = bytes[25..(25 + key_count as usize * RECORD_SIZE)].chunks(RECORD_SIZE);
         let children_bytes = bytes[(25 + max_key_count * RECORD_SIZE)
@@ -550,7 +529,7 @@ impl Node {
             .chunks(8);
 
         let keys = record_bytes.map(|b| Record::try_from(b).unwrap()).collect();
-        let children = if is_leaf {
+        let children = if !is_leaf {
             children_bytes
                 .map(|b| Some(u64::from_le_bytes(b.try_into().unwrap())))
                 .collect()

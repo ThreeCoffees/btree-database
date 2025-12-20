@@ -32,12 +32,14 @@ impl DataFile {
     pub fn get_data(&mut self, record: &Record) -> Result<Data, Box<dyn Error>>{
         let mut buf = [PADDING_CHAR; MAX_RECORD_LENGTH];
 
+        self.file.sync_data().unwrap();
+
         self.file.seek(SeekFrom::Start(record.data_address()))?;
 
         if let Ok(_) = self.file.read_exact(&mut buf) {
             Ok(Data::try_from(buf.as_slice())?)
         } else {
-            return Err("Error reading data from file".into());
+            return Err("Error reading enough data from file".into());
         }
     }
 
