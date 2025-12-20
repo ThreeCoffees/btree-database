@@ -1,15 +1,28 @@
-use std::{error::Error, fs::File, io::{Read, Seek, SeekFrom, Write}, path::Path};
+use std::{
+    error::Error,
+    fs::File,
+    io::{Read, Seek, SeekFrom, Write},
+    path::Path,
+    u64,
+};
 
-use crate::{consts::{MAX_RECORD_LENGTH, PADDING_CHAR}, data::Data, record::Record};
+use crate::{
+    consts::{BUFFER_SIZE, MAX_RECORD_LENGTH, PADDING_CHAR},
+    data::Data,
+    record::Record,
+};
 
 #[derive(Debug)]
 pub struct DataFile {
     pub file: File,
     pub next_id: u64,
+    buffer: [u8; BUFFER_SIZE * MAX_RECORD_LENGTH],
+    curr_buf_position: u64,
+    curr_buf_len: u64,
 }
 
 impl PartialEq for DataFile {
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _: &Self) -> bool {
         //self.file == other.file
         true
     }
@@ -26,38 +39,76 @@ impl DataFile {
                 .open(file_name)
                 .unwrap(),
             next_id: 0,
+            buffer: [PADDING_CHAR; BUFFER_SIZE * MAX_RECORD_LENGTH],
+            curr_buf_position: 0,
+            curr_buf_len: 0,
         }
     }
 
-    pub fn get_data(&mut self, record: &Record) -> Result<Data, Box<dyn Error>>{
-        let mut buf = [PADDING_CHAR; MAX_RECORD_LENGTH];
-
+    pub fn get_data(&mut self, record: &Record) -> Result<Data, Box<dyn Error>> {
         self.file.sync_data().unwrap();
+        let record_buf_position = Self::get_buf_pos(record.data_id);
+        let data_buf_offset: usize = record.data_address() as usize - record_buf_position as usize;
 
-        self.file.seek(SeekFrom::Start(record.data_address()))?;
-
-        if let Ok(_) = self.file.read_exact(&mut buf) {
-            Ok(Data::try_from(buf.as_slice())?)
-        } else {
-            return Err("Error reading enough data from file".into());
+        if record_buf_position != self.curr_buf_position
+            || data_buf_offset as u64 >= self.curr_buf_len
+        {
+            self.read_buffer(record.data_id)?;
         }
+
+        Data::try_from(&self.buffer[data_buf_offset..data_buf_offset + MAX_RECORD_LENGTH])
     }
 
-    pub fn write_data(&mut self, record: &Record, data: &Data) -> Result<(), Box<dyn Error>>{
-        self.file.seek(SeekFrom::Start(record.data_address()))?;
+    pub fn write_data(&mut self, record: &Record, data: &Data) -> Result<(), Box<dyn Error>> {
+        let record_buf_position = Self::get_buf_pos(record.data_id);
+        let data_buf_offset: usize = record.data_address() as usize - record_buf_position as usize;
 
-        self.file.write(Vec::from(data).as_slice())?;
+        if record_buf_position != self.curr_buf_position {
+            self.read_buffer(record.data_id)?;
+        }
 
-        self.next_id+=1;
+        self.buffer[data_buf_offset..data_buf_offset + MAX_RECORD_LENGTH]
+            .copy_from_slice(Vec::from(data).as_slice());
+        self.next_id += 1;
+
         Ok(())
     }
 
-    pub fn update_data(&mut self, record: &Record, data: &Data) -> Result<(), Box<dyn Error>>{
-        self.file.seek(SeekFrom::Start(record.data_address()))?;
+    pub fn update_data(&mut self, record: &Record, data: &Data) -> Result<(), Box<dyn Error>> {
+        let record_buf_position = Self::get_buf_pos(record.data_id);
+        let data_buf_offset: usize = record.data_address() as usize - record_buf_position as usize;
 
-        self.file.write(Vec::from(data).as_slice())?;
+        if record_buf_position != self.curr_buf_position {
+            println!("moving the buffer {} {}", record_buf_position, data_buf_offset);
+            self.read_buffer(record.data_id)?;
+        }
+
+        self.buffer[data_buf_offset..data_buf_offset + MAX_RECORD_LENGTH]
+            .copy_from_slice(Vec::from(data).as_slice());
+        Ok(())
+    }
+
+    fn write_buffer(&mut self) -> Result<(), Box<dyn Error>> {
+        self.file.seek(SeekFrom::Start(self.curr_buf_position))?;
+        self.file.write(&self.buffer)?;
+        self.file.sync_data()?;
+        Ok(())
+    }
+
+    fn get_buf_pos(data_id: u64) -> u64 {
+        data_id / BUFFER_SIZE as u64 * BUFFER_SIZE as u64 * MAX_RECORD_LENGTH as u64
+    }
+
+    fn read_buffer(&mut self, data_id: u64) -> Result<(), Box<dyn Error>> {
+        self.write_buffer()?;
+        self.buffer =  [PADDING_CHAR; BUFFER_SIZE * MAX_RECORD_LENGTH];
+
+        let buf_pos = Self::get_buf_pos(data_id);
+
+        self.file.seek(SeekFrom::Start(buf_pos))?;
+        self.curr_buf_len = self.file.read(&mut self.buffer).unwrap_or(0) as u64;
+        self.curr_buf_position = buf_pos;
 
         Ok(())
     }
 }
-

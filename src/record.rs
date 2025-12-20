@@ -12,7 +12,7 @@ use crate::{
     btree::{self, BTree}, consts::{MAX_RECORD_LENGTH, PADDING_CHAR}, data::Data
 };
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Record {
     pub key: u64,
     pub data_id: u64,

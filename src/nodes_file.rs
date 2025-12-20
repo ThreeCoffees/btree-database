@@ -1,10 +1,11 @@
 use std::{
+    collections::HashMap,
     fs::File,
-    io::{BufReader, BufWriter, Read, Seek, Write},
+    io::{Read, Seek, Write},
     path::Path,
 };
 
-use crate::{btree::BTree, node::Node};
+use crate::node::Node;
 
 #[derive(Debug)]
 pub struct NodesFile {
@@ -13,6 +14,7 @@ pub struct NodesFile {
     pub order: usize,
     pub node_byte_size: usize,
     pub node_buffer: Vec<u8>,
+    pub cache: HashMap<u64, Node>,
 }
 
 impl PartialEq for NodesFile {
@@ -22,6 +24,8 @@ impl PartialEq for NodesFile {
     }
 }
 
+const CACHE_SIZE_LIMIT: usize = 10;
+
 impl NodesFile {
     pub fn new(file_name: &Path, order: usize) -> Self {
         let node_byte_size = Node::byte_size(order);
@@ -30,46 +34,65 @@ impl NodesFile {
                 .create(true)
                 .read(true)
                 .write(true)
-                .truncate(true) // TODO: switch to reading the node count and updating next_id accordingly
                 .open(file_name)
                 .unwrap(),
             next_id: 0,
             order,
             node_byte_size,
             node_buffer: vec![0; node_byte_size],
+            cache: HashMap::new(),
         }
     }
 
     pub fn get_node(&mut self, id: u64) -> Node {
-        self.file
-            .seek(std::io::SeekFrom::Start(id * self.node_byte_size as u64)).unwrap();
-        self.file.read_exact(self.node_buffer.as_mut_slice()).unwrap();
-        let node = Node::from_bytes(self.node_buffer.as_slice(), self.order);
-        //println!("get: {:?}", node);
-        //println!("get: {:?}", self.node_buffer);
-
-        node
+        if self.cache.contains_key(&id) {
+            self.cache.get(&id).unwrap().clone()
+        } else {
+            self.file
+                .seek(std::io::SeekFrom::Start(id * self.node_byte_size as u64))
+                .unwrap();
+            self.file
+                .read_exact(self.node_buffer.as_mut_slice())
+                .unwrap();
+            let node = Node::from_bytes(self.node_buffer.as_slice(), self.order);
+            self.add_to_cache(&node);
+            node
+        }
     }
 
     pub fn update_node(&mut self, node: &Node) {
-        self.file
-            .seek(std::io::SeekFrom::Start(node.id * self.node_byte_size as u64)).unwrap();
-        self.node_buffer = node.to_bytes(self.order);
-        //println!("update: {:?}", node);
-        //println!("update: {:?}", self.node_buffer);
-        self.file.write(self.node_buffer.as_slice()).unwrap();
-        self.file.sync_data().unwrap();
+        self.add_to_cache(node);
+    }
+
+    pub fn add_to_cache(&mut self, node: &Node) {
+        self.cache.insert(node.id, node.clone());
+        if self.cache.len() >= CACHE_SIZE_LIMIT {
+            self.write_cache();
+        }
     }
 
     pub fn create_node(&mut self, node: &Node) {
-        self.file
-            .seek(std::io::SeekFrom::Start(self.next_id * self.node_byte_size as u64)).unwrap();
-        self.node_buffer = node.to_bytes(self.order);
-        //println!("create: {:?}", node);
-        //println!("create: {:?}", self.node_buffer);
+        self.add_to_cache(node);
         self.next_id += 1;
+    }
 
-        self.file.write(self.node_buffer.as_slice()).unwrap();
+    pub fn write_cache(&mut self) {
+        for (_, node) in self.cache.iter() {
+            self.file
+                .seek(std::io::SeekFrom::Start(
+                    node.id * self.node_byte_size as u64,
+                ))
+                .unwrap();
+            self.node_buffer = node.to_bytes(self.order);
+            self.file.write(self.node_buffer.as_slice()).unwrap();
+        }
         self.file.sync_data().unwrap();
+        self.cache.clear();
+    }
+}
+
+impl Drop for NodesFile {
+    fn drop(&mut self) {
+        self.write_cache();
     }
 }

@@ -7,7 +7,7 @@ use crate::{
     record::{RECORD_SIZE, Record},
 };
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Eq, Hash)]
 pub struct Node {
     pub id: u64,
     pub parent_node_id: Option<u64>,
@@ -214,14 +214,6 @@ impl Node {
             self.get_compensation_partners_deletion(btree)?;
 
         self.compensate(btree, &mut parent, key_position_in_parent, &mut sibling)
-    }
-
-    fn insert_into_sorted(dest: &mut Vec<u64>, new_key: u64) {
-        let insert_idx = match dest.binary_search(&new_key) {
-            Ok(i) => i,
-            Err(i) => i,
-        };
-        dest.insert(insert_idx, new_key);
     }
 
     fn split(&mut self, btree: &mut BTree) {
