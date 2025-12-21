@@ -132,19 +132,16 @@ impl Node {
                             if sibling_right.keys.len() >= 2 * btree.order {
                                 return Err(());
                             }
-                            println!("here0");
                             return Ok((parent, position_in_parent, sibling_right));
                         }
                         return Err(());
                     }
-                    println!("here1");
                     return Ok((parent, position_in_parent - 1, sibling_left));
                 } else {
                     let sibling = btree.get_node(parent.children[position_in_parent + 1].unwrap());
                     if sibling.keys.len() >= 2 * btree.order {
                         return Err(());
                     }
-                    println!("here2");
                     return Ok((parent, 0, sibling));
                 }
             }
@@ -337,7 +334,7 @@ impl Node {
         let (mut parent, position_in_parent) = self.get_parent(btree);
 
         if position_in_parent < parent.keys.len() {
-            let mut sibling = btree.get_node(position_in_parent as u64 + 1);
+            let mut sibling = btree.get_node(parent.children[position_in_parent + 1].unwrap());
 
             self.keys.push(parent.keys.remove(position_in_parent));
             parent.children.remove(position_in_parent + 1);
@@ -355,7 +352,7 @@ impl Node {
             sibling.is_deleted = true;
             btree.update_node(&sibling);
         } else {
-            let mut sibling = btree.get_node(position_in_parent as u64 - 1);
+            let mut sibling = btree.get_node(parent.children[position_in_parent - 1].unwrap());
 
             sibling
                 .keys
