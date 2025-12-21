@@ -20,11 +20,11 @@ pub enum InsertedData {
 }
 
 impl BTree {
-    pub fn new(nodes_file_name: &Path, data_file_name: &Path, order: usize) -> Self {
+    pub fn new(nodes_file_name: &Path, data_file_name: &Path, order: usize, buffer_size: usize, cache_size: usize) -> Self {
         Self {
             root_id: None,
-            nodes_file: NodesFile::new(nodes_file_name, order),
-            data_file: DataFile::new(data_file_name),
+            nodes_file: NodesFile::new(nodes_file_name, order, cache_size),
+            data_file: DataFile::new(data_file_name, buffer_size),
             order,
         }
     }

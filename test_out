@@ -1,0 +1,498 @@
+Deleting| 146
+Error deleting record: ()
+Inserting| 254:  d4LvZ2 Pv MO506KRmcuFRD1
+Deleting| 9
+Error deleting record: ()
+Inserting| 252:  7YCBsvaA8l96Tmn7w
+Updating| 155 -> 65:  Jsx1EIn894 ULf9O6NwaGX
+Error updating record: ()
+Updating| 354 -> 60:  jyITEfhmeO6RPUf9VRqijrj5uU8F
+Error updating record: ()
+Updating| 288 -> 68:  hziyh2JTqCYCJxxV2RAsV7Ny
+Error updating record: ()
+Deleting| 274
+Error deleting record: ()
+Deleting| 40
+Error deleting record: ()
+Updating| 94 -> 138:  0lnN81RMW4r17OC2hC9edyktxa
+Error updating record: ()
+Inserting| 3:  D9WQ3FlZyTW
+Deleting| 371
+Error deleting record: ()
+Inserting| 222:  LHG3AajAT
+Inserting| 210:  fJD5sMmabLpqtsGURroqU0
+Inserting| 237:  GsVXml5W
+Updating| 276 -> 237:  ciukZTUL70CM77dPTylvEV
+Error updating record: ()
+Deleting| 368
+Error deleting record: ()
+Inserting| 93:  EdCOyP0D2mVoVi4jhcVdPXa
+Inserting| 355:  l0p0HJVj
+Inserting| 394:  8jsRvtf2diOnVzDll7GbRCX0
+here1
+Compensating: 
+Node { id: 1, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 237, data_id: 5 }, Record { key: 252, data_id: 1 }, Record { key: 254, data_id: 0 }, Record { key: 355, data_id: 7 }, Record { key: 394, data_id: 8 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 222, data_id: 3 }], children: [Some(0), Some(1)] }, 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 3, data_id: 2 }, Record { key: 93, data_id: 6 }, Record { key: 210, data_id: 4 }], children: [None, None, None, None] }
+Inserting| 350:  SubaDQLnZF
+Deleting| 290
+Error deleting record: ()
+Deleting| 38
+Error deleting record: ()
+Updating| 183 -> 340:  qBLJagA
+Error updating record: ()
+Updating| 118 -> 149:  3caWv8
+Error updating record: ()
+Inserting| 31:  MhbZ4l83q8uuTBsooWoCiwfhq
+here2
+Compensating: 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 3, data_id: 2 }, Record { key: 31, data_id: 10 }, Record { key: 93, data_id: 6 }, Record { key: 210, data_id: 4 }, Record { key: 222, data_id: 3 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 237, data_id: 5 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(1), Some(3)] }, 
+Node { id: 1, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 252, data_id: 1 }, Record { key: 254, data_id: 0 }], children: [None, None, None] }
+Deleting| 282
+Error deleting record: ()
+Updating| 253 -> 368:  V5rjS8wSQUgsRNlPkMY
+Error updating record: ()
+Updating| 274 -> 105:  1dmEI9Tt9nzgaTOfRn8FcdZxDD6
+Error updating record: ()
+Deleting| 370
+Error deleting record: ()
+Updating| 349 -> 71:  ft1jX
+Error updating record: ()
+Deleting| 296
+Error deleting record: ()
+Updating| 167 -> 219:  uOLiCaC0c
+Error updating record: ()
+Updating| 132 -> 254:  82Viyy
+Error updating record: ()
+Inserting| 376:  1QvsNzD4rONDy
+Updating| 39 -> 46:  gJ
+Error updating record: ()
+Inserting| 94:  hEv8FxRZ9n8G2y5X2XvaeInJ
+here2
+Compensating: 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 3, data_id: 2 }, Record { key: 31, data_id: 10 }, Record { key: 93, data_id: 6 }, Record { key: 94, data_id: 12 }, Record { key: 210, data_id: 4 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 222, data_id: 3 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(1), Some(3)] }, 
+Node { id: 1, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 237, data_id: 5 }, Record { key: 252, data_id: 1 }, Record { key: 254, data_id: 0 }], children: [None, None, None, None] }
+Inserting| 70:  CkFnXsfYmPBjQ0pP26nZ
+Inserting| 289:  xXuKRvwcI9XwFBE2t
+here1
+Compensating: 
+Node { id: 1, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 222, data_id: 3 }, Record { key: 237, data_id: 5 }, Record { key: 252, data_id: 1 }, Record { key: 254, data_id: 0 }, Record { key: 289, data_id: 14 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 70, data_id: 13 }, Record { key: 210, data_id: 4 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(4), Some(1), Some(3)] }, 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 93, data_id: 6 }, Record { key: 94, data_id: 12 }], children: [None, None, None] }
+Inserting| 43:  d6O1hHgYaiU5SfZ3ovNRDyrQAC
+Updating| 63 -> 146:  4kiqI3fL4n91hYzKF
+Error updating record: ()
+Deleting| 233
+Error deleting record: ()
+Inserting| 227:  HhO97qXGicV
+here1
+Compensating: 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 93, data_id: 6 }, Record { key: 94, data_id: 12 }, Record { key: 210, data_id: 4 }, Record { key: 222, data_id: 3 }, Record { key: 227, data_id: 16 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 70, data_id: 13 }, Record { key: 237, data_id: 5 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(4), Some(1), Some(3)] }, 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 3, data_id: 2 }, Record { key: 31, data_id: 10 }, Record { key: 43, data_id: 15 }], children: [None, None, None, None] }
+Inserting| 212:  Ui2nvVoTM3isP9qWtdU5h z
+here0
+Compensating: 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 94, data_id: 12 }, Record { key: 210, data_id: 4 }, Record { key: 212, data_id: 17 }, Record { key: 222, data_id: 3 }, Record { key: 227, data_id: 16 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 93, data_id: 6 }, Record { key: 237, data_id: 5 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(4), Some(1), Some(3)] }, 
+Node { id: 1, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 252, data_id: 1 }, Record { key: 254, data_id: 0 }, Record { key: 289, data_id: 14 }], children: [None, None, None, None] }
+Deleting| 63
+Error deleting record: ()
+Inserting| 217:  gYaQe1yO0CNe6Giu N6MQdH
+Updating| 177 -> 316:  BBaOM32RWcvcfC
+Error updating record: ()
+Deleting| 170
+Error deleting record: ()
+Deleting| 377
+Error deleting record: ()
+Inserting| 355:   oB41AUh90JS9cFNsDavyIoj
+Error inserting record: ()
+Deleting| 386
+Error deleting record: ()
+Updating| 164 -> 106:  o3fSOFArd8c5bjNPk4WlcU
+Error updating record: ()
+Updating| 390 -> 376:  OiahN
+Error updating record: ()
+Deleting| 245
+Error deleting record: ()
+Deleting| 60
+Error deleting record: ()
+Inserting| 63:  6Jhau9AbEs76hhXyRqmt1f
+here2
+Compensating: 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 3, data_id: 2 }, Record { key: 31, data_id: 10 }, Record { key: 43, data_id: 15 }, Record { key: 63, data_id: 19 }, Record { key: 70, data_id: 13 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 93, data_id: 6 }, Record { key: 212, data_id: 17 }, Record { key: 227, data_id: 16 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(4), Some(5), Some(1), Some(3)] }, 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 94, data_id: 12 }, Record { key: 210, data_id: 4 }], children: [None, None, None] }
+Deleting| 28
+Error deleting record: ()
+Updating| 361 -> 136:  6lJ0Bunqi5aauSwirwZ2tJx8
+Error updating record: ()
+Updating| 142 -> 186:  i4zaYDLf3Ci
+Error updating record: ()
+Inserting| 374:  uqeH
+Deleting| 4
+Error deleting record: ()
+Updating| 58 -> 43:  SAAtI4joBTCoa5whaMtqUu3dl
+Error updating record: ()
+Updating| 173 -> 270:  S Oo27Fjml
+Error updating record: ()
+Inserting| 180:  z30GW2w55lCu
+Deleting| 32
+Error deleting record: ()
+Deleting| 316
+Error deleting record: ()
+Inserting| 301:  b6JlyDyqqy0
+here1
+Compensating: 
+Node { id: 1, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 237, data_id: 5 }, Record { key: 252, data_id: 1 }, Record { key: 254, data_id: 0 }, Record { key: 289, data_id: 14 }, Record { key: 301, data_id: 22 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 70, data_id: 13 }, Record { key: 212, data_id: 17 }, Record { key: 227, data_id: 16 }, Record { key: 350, data_id: 9 }], children: [Some(0), Some(4), Some(5), Some(1), Some(3)] }, 
+Node { id: 5, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 217, data_id: 18 }, Record { key: 222, data_id: 3 }], children: [None, None, None] }
+Inserting| 178:  rG9N0
+Deleting| 110
+Error deleting record: ()
+Updating| 101 -> 14:  r mZIfjxlmZRT3mYK6UR 8UyCQC
+Error updating record: ()
+Deleting| 64
+Error deleting record: ()
+Updating| 306 -> 36:  Ie
+Error updating record: ()
+Updating| 141 -> 252:  UftKOcCFqpfM2 IKwP
+Error updating record: ()
+Inserting| 83:  Ot 2c0Ms896XQ84UdBQG
+Updating| 250 -> 289:  826uipMerPYg20Qvqle
+Error updating record: ()
+Deleting| 289
+Deleting| 299
+Error deleting record: ()
+Inserting| 0:  93t
+here2
+Compensating: 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 0, data_id: 25 }, Record { key: 3, data_id: 2 }, Record { key: 31, data_id: 10 }, Record { key: 43, data_id: 15 }, Record { key: 63, data_id: 19 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 70, data_id: 13 }, Record { key: 178, data_id: 23 }], children: [Some(0), Some(4), Some(6)] }, 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 83, data_id: 24 }, Record { key: 93, data_id: 6 }, Record { key: 94, data_id: 12 }], children: [None, None, None, None] }
+Updating| 186 -> 362:  2UXrb GmUW w
+Error updating record: ()
+Updating| 239 -> 337:  nPx
+Error updating record: ()
+Inserting| 205:  HhH6hpkaaOM
+Deleting| 168
+Error deleting record: ()
+Updating| 377 -> 171:  CB738Iad84F8
+Error updating record: ()
+Deleting| 284
+Error deleting record: ()
+Updating| 239 -> 34:  7uT1E4rLFdnDYHD
+Error updating record: ()
+Updating| 13 -> 146:  JaqWdGDiApWTv UqxLOcoK4
+Error updating record: ()
+Inserting| 47:  WeYV3bIvrTQncAuHql
+Deleting| 88
+Error deleting record: ()
+Inserting| 328:  Y3jrD
+Updating| 314 -> 330:  veuqr
+Error updating record: ()
+Updating| 51 -> 183:  3TBooqg2nufkH44unt
+Error updating record: ()
+Inserting| 172:  W
+here1
+Compensating: 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 70, data_id: 13 }, Record { key: 83, data_id: 24 }, Record { key: 93, data_id: 6 }, Record { key: 94, data_id: 12 }, Record { key: 172, data_id: 29 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 31, data_id: 10 }, Record { key: 63, data_id: 19 }, Record { key: 178, data_id: 23 }], children: [Some(0), Some(9), Some(4), Some(6)] }, 
+Node { id: 9, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 43, data_id: 15 }, Record { key: 47, data_id: 27 }], children: [None, None, None] }
+Deleting| 63
+Updating| 28 -> 285:  TG0RKdfmEcH7IFjzP78KCYH
+Error updating record: ()
+Deleting| 18
+Error deleting record: ()
+Updating| 326 -> 120:  28B01duaN1
+Error updating record: ()
+Deleting| 212
+Inserting| 179:  ssBaCTGNBxD0nxRNhbxw7McBdDXY
+Inserting| 223:  hbA9qwbnbBHw 29E
+Deleting| 385
+Error deleting record: ()
+Deleting| 396
+Error deleting record: ()
+Deleting| 172
+Deleting| 398
+Error deleting record: ()
+Deleting| 129
+Error deleting record: ()
+Deleting| 310
+Error deleting record: ()
+Updating| 362 -> 99:  BeQL8BFpzvDU5y
+Error updating record: ()
+Deleting| 93
+Compensating: 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 94, data_id: 12 }], children: [None, None] }, 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 31, data_id: 10 }, Record { key: 83, data_id: 24 }, Record { key: 178, data_id: 23 }], children: [Some(0), Some(9), Some(4), Some(6)] }, 
+Node { id: 9, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 43, data_id: 15 }, Record { key: 47, data_id: 27 }, Record { key: 70, data_id: 13 }], children: [None, None, None, None] }
+Updating| 116 -> 383:  Sejl0Buk7vg6eWGu
+Error updating record: ()
+Inserting| 394:  S3GfuE2
+Error inserting record: ()
+Inserting| 23:  9Ai0ZlvnTtJW6toa3SjV4BgkqPFKg
+Inserting| 31:  cXTb5FiEmzt437
+Error inserting record: ()
+Deleting| 104
+Error deleting record: ()
+Deleting| 43
+Compensating: 
+Node { id: 9, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 47, data_id: 27 }], children: [None, None] }, 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 31, data_id: 10 }, Record { key: 70, data_id: 13 }, Record { key: 178, data_id: 23 }], children: [Some(0), Some(9), Some(4), Some(6)] }, 
+Node { id: 0, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 0, data_id: 25 }, Record { key: 3, data_id: 2 }, Record { key: 23, data_id: 32 }], children: [None, None, None, None] }
+Updating| 228 -> 298:  upuO303W1V
+Error updating record: ()
+Inserting| 119:  TwH6gsVoHbTU08sbzm3u9J
+Inserting| 3:  oIGFkIQExJyEukNDf
+Error inserting record: ()
+Updating| 188 -> 350:  92Q4JcEzmH
+Error updating record: ()
+Updating| 310 -> 37:  IrAR
+Error updating record: ()
+Deleting| 94
+Deleting| 198
+Error deleting record: ()
+Updating| 52 -> 131:  Dp9Hubd04Ye5HcX 793HWB8br
+Error updating record: ()
+Updating| 92 -> 38:  WwlGTrvjnGu0nUbdCj0QNKhuf
+Error updating record: ()
+Deleting| 299
+Error deleting record: ()
+Deleting| 26
+Error deleting record: ()
+Updating| 45 -> 318:  2MuGAg3Khhg 6VkV291SUDqAMc3
+Error updating record: ()
+Inserting| 5:  7ErIorjz4PYQK7KrY3oW
+Updating| 25 -> 216:  oQT
+Error updating record: ()
+Deleting| 76
+Error deleting record: ()
+Updating| 231 -> 79:  IjwF7OfDivQxvYghGSqAots
+Error updating record: ()
+Deleting| 307
+Error deleting record: ()
+Inserting| 48:  hBz b
+Inserting| 346:  3Foa0n
+Inserting| 80:  O8Zg6MliuDsLgsAGCulQuwjT0
+Updating| 187 -> 79:  q9pOt
+Error updating record: ()
+Inserting| 53:  5Fy8TdToegrEqXQOSosU
+Deleting| 329
+Error deleting record: ()
+Inserting| 109:  QC
+Deleting| 316
+Error deleting record: ()
+Deleting| 201
+Error deleting record: ()
+Updating| 143 -> 139:  6137XMGoi2LVpDc3QU K3TBlr p
+Error updating record: ()
+Updating| 175 -> 386:  VM7XuJidXod9pb
+Error updating record: ()
+Deleting| 3
+Inserting| 314:  0GhLukAwxJkEW3WWxq01DXm
+Deleting| 222
+Inserting| 203:  qJ
+Updating| 370 -> 54:  j8QVm5
+Error updating record: ()
+Inserting| 346:  PevdpGW1sXY5WkWDQyBF6tyix
+Error inserting record: ()
+Updating| 338 -> 351:  9QrjVyMeS2y981pSgc
+Error updating record: ()
+Updating| 131 -> 226:  WKLLs  
+Error updating record: ()
+Inserting| 105:  q
+here0
+Compensating: 
+Node { id: 4, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 80, data_id: 37 }, Record { key: 83, data_id: 24 }, Record { key: 105, data_id: 42 }, Record { key: 109, data_id: 39 }, Record { key: 119, data_id: 33 }], children: [None, None, None, None, None, None] }, 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 23, data_id: 32 }, Record { key: 70, data_id: 13 }, Record { key: 178, data_id: 23 }, Record { key: 203, data_id: 41 }], children: [Some(0), Some(9), Some(4), Some(6), Some(11)] }, 
+Node { id: 6, parent_node_id: Some(2), is_leaf: true, is_deleted: false, keys: [Record { key: 179, data_id: 30 }, Record { key: 180, data_id: 21 }], children: [None, None, None] }
+Updating| 30 -> 291:  RPhqpV6liNuXoQ1G
+Error updating record: ()
+Deleting| 280
+Error deleting record: ()
+Inserting| 260:  1ZQ4bA7Ib6AzSKAV8JVubtp4doa
+Inserting| 363:  a82Ohtx2z5QVd32qJcFnVNM7Y99
+here1
+Compensating: 
+Node { id: 3, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 355, data_id: 7 }, Record { key: 363, data_id: 44 }, Record { key: 374, data_id: 20 }, Record { key: 376, data_id: 11 }, Record { key: 394, data_id: 8 }], children: [None, None, None, None, None, None] }, 
+Node { id: 7, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 252, data_id: 1 }, Record { key: 314, data_id: 40 }, Record { key: 350, data_id: 9 }], children: [Some(5), Some(1), Some(10), Some(3)] }, 
+Node { id: 10, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 328, data_id: 28 }, Record { key: 346, data_id: 36 }], children: [None, None, None] }
+Deleting| 222
+Error deleting record: ()
+Deleting| 12
+Error deleting record: ()
+Deleting| 310
+Error deleting record: ()
+Updating| 26 -> 177:  ZxGO4JOlprofHIiO7J
+Error updating record: ()
+Inserting| 231:  823si4ubQb6iyqO5ow
+Inserting| 349:  I8yBQXdHtB
+here1
+Compensating: 
+Node { id: 10, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 328, data_id: 28 }, Record { key: 346, data_id: 36 }, Record { key: 349, data_id: 46 }, Record { key: 350, data_id: 9 }, Record { key: 355, data_id: 7 }], children: [None, None, None, None, None, None] }, 
+Node { id: 7, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 252, data_id: 1 }, Record { key: 314, data_id: 40 }, Record { key: 363, data_id: 44 }], children: [Some(5), Some(1), Some(10), Some(3)] }, 
+Node { id: 1, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 254, data_id: 0 }, Record { key: 260, data_id: 43 }, Record { key: 301, data_id: 22 }], children: [None, None, None, None] }
+Updating| 194 -> 173:  HN26b
+Error updating record: ()
+Updating| 33 -> 16:  1nqhW73Wj
+Error updating record: ()
+Inserting| 341:  ZJF1UqkXOJI2 hi9M
+here0
+Compensating: 
+Node { id: 10, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 341, data_id: 47 }, Record { key: 346, data_id: 36 }, Record { key: 349, data_id: 46 }, Record { key: 350, data_id: 9 }, Record { key: 355, data_id: 7 }], children: [None, None, None, None, None, None] }, 
+Node { id: 7, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 252, data_id: 1 }, Record { key: 328, data_id: 28 }, Record { key: 363, data_id: 44 }], children: [Some(5), Some(1), Some(10), Some(3)] }, 
+Node { id: 3, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 374, data_id: 20 }, Record { key: 376, data_id: 11 }, Record { key: 394, data_id: 8 }], children: [None, None, None, None] }
+Deleting| 86
+Error deleting record: ()
+Inserting| 17:  68Y6ikwg3vvLS1B9CNNln
+Updating| 359 -> 178:  AaaTb
+Error updating record: ()
+Inserting| 15:  rxCh29huJLo6XKDd
+Updating| 157 -> 80:  QChNglrI7v3VIQ5jC
+Error updating record: ()
+Deleting| 289
+Error deleting record: ()
+Inserting| 363:  8wP3uojkF6ofh
+Error inserting record: ()
+Inserting| 45:  i4mriPa10wjdmfy KUtl
+here2
+Compensating: 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 23, data_id: 32 }, Record { key: 47, data_id: 27 }, Record { key: 70, data_id: 13 }, Record { key: 119, data_id: 33 }, Record { key: 203, data_id: 41 }], children: [Some(0), Some(9), Some(12), Some(4), Some(6), Some(11)] }, 
+Node { id: 8, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 217, data_id: 18 }], children: [Some(2), Some(7)] }, 
+Node { id: 7, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 252, data_id: 1 }, Record { key: 328, data_id: 28 }, Record { key: 355, data_id: 7 }], children: [Some(5), Some(1), Some(10), Some(3)] }
+Deleting| 198
+Error deleting record: ()
+Updating| 156 -> 302:  uz7KN7Xms8SXc8k8cQTFhA39
+Error updating record: ()
+Deleting| 35
+Error deleting record: ()
+Updating| 264 -> 85:  HA
+Error updating record: ()
+Inserting| 294:  ceMaO0Wv
+Deleting| 100
+Error deleting record: ()
+Inserting| 207:  w3AE oUcUABz5
+Updating| 385 -> 209:  8X9SYaBxYKJbYXAPVTz
+Error updating record: ()
+Updating| 145 -> 347:  xurTUo
+Error updating record: ()
+Deleting| 266
+Error deleting record: ()
+Inserting| 241:  hzQd7tHOlG0d5Giqt0Gv5JdHl58bM
+here1
+Compensating: 
+Node { id: 5, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 223, data_id: 31 }, Record { key: 227, data_id: 16 }, Record { key: 231, data_id: 45 }, Record { key: 237, data_id: 5 }, Record { key: 241, data_id: 53 }], children: [None, None, None, None, None, None] }, 
+Node { id: 7, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 217, data_id: 18 }, Record { key: 252, data_id: 1 }], children: [Some(11), Some(5), Some(1)] }, 
+Node { id: 11, parent_node_id: Some(7), is_leaf: true, is_deleted: false, keys: [Record { key: 205, data_id: 26 }, Record { key: 207, data_id: 52 }, Record { key: 210, data_id: 4 }], children: [None, None, None, None] }
+Updating| 13 -> 113:  0KtbbCeo 386DLxK2uO1
+Error updating record: ()
+Deleting| 81
+Error deleting record: ()
+Inserting| 285:  kS
+Updating| 114 -> 189:  jNzkVMZl35LjDSVT4TtmbumT
+Error updating record: ()
+Updating| 185 -> 107:  WQy6XW1TZ6DGVjUsqOMLdRI fuM
+Error updating record: ()
+Deleting| 5
+Deleting| 273
+Error deleting record: ()
+Inserting| 166:  c1v4kMLsoTjVSu
+Inserting| 53:  8ev7EzeIAmOOC8RW5EBAXB
+Error inserting record: ()
+Deleting| 360
+Error deleting record: ()
+Deleting| 315
+Error deleting record: ()
+Inserting| 168:  3ReZ2P4WwSxmVdBwo3ERsGX
+here2
+Compensating: 
+Node { id: 2, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 23, data_id: 32 }, Record { key: 47, data_id: 27 }, Record { key: 70, data_id: 13 }, Record { key: 119, data_id: 33 }, Record { key: 178, data_id: 23 }], children: [Some(0), Some(9), Some(12), Some(4), Some(6), Some(15)] }, 
+Node { id: 8, parent_node_id: None, is_leaf: false, is_deleted: false, keys: [Record { key: 203, data_id: 41 }, Record { key: 294, data_id: 51 }], children: [Some(2), Some(7), Some(14)] }, 
+Node { id: 7, parent_node_id: Some(8), is_leaf: false, is_deleted: false, keys: [Record { key: 223, data_id: 31 }, Record { key: 252, data_id: 1 }], children: [Some(11), Some(5), Some(1)] }
+Deleting| 200
+Error deleting record: ()
+Deleting| 134
+Error deleting record: ()
+Inserting| 391:  CKbbVPb
+Deleting| 308
+Error deleting record: ()
+Updating| 379 -> 177:  SbAcA sKDKVc5
+Error updating record: ()
+Deleting| 259
+Error deleting record: ()
+
+=== B Tree ===
+Order: 2
+Nodes file: File { fd: 3, path: "/home/leonard/Desktop/Projects/b-tree-tutorial/test_files/insert_input_test_nodes", read: true, write: true }
+Data file: File { fd: 4, path: "/home/leonard/Desktop/Projects/b-tree-tutorial/test_files/insert_input_test_data", read: true, write: true }
+--- Nodes ---
+X| id: 8 keys: "[178: 23][294: 51]"
+--8| id: 2 keys: "[23: 32][47: 27][70: 13][119: 33]"
+----2| id: 0 keys: "[0: 25][15: 49][17: 48]"
+----2| id: 9 keys: "[31: 10][45: 50]"
+----2| id: 12 keys: "[48: 35][53: 38]"
+----2| id: 4 keys: "[80: 37][83: 24][105: 42][109: 39]"
+----2| id: 6 keys: "[166: 55][168: 56]"
+--8| id: 7 keys: "[203: 41][223: 31][252: 1]"
+----7| id: 15 keys: "[179: 30][180: 21]"
+----7| id: 11 keys: "[205: 26][207: 52][210: 4][217: 18]"
+----7| id: 5 keys: "[227: 16][231: 45][237: 5][241: 53]"
+----7| id: 1 keys: "[254: 0][260: 43][285: 54]"
+--8| id: 14 keys: "[328: 28][355: 7][376: 11]"
+----14| id: 13 keys: "[301: 22][314: 40]"
+----14| id: 10 keys: "[341: 47][346: 36][349: 46][350: 9]"
+----14| id: 3 keys: "[363: 44][374: 20]"
+----14| id: 16 keys: "[391: 57][394: 8]"
+--- Records ---
+0:  93t
+15:  rxCh29huJLo6XKDd
+17:  68Y6ikwg3vvLS1B9CNNln
+23:  9Ai0ZlvnTtJW6toa3SjV4BgkqPFKg
+31:  MhbZ4l83q8uuTBsooWoCiwfhq
+45:  i4mriPa10wjdmfy KUtl
+47:  WeYV3bIvrTQncAuHql
+48:  hBz b
+53:  5Fy8TdToegrEqXQOSosU
+70:  CkFnXsfYmPBjQ0pP26nZ
+80:  O8Zg6MliuDsLgsAGCulQuwjT0
+83:  Ot 2c0Ms896XQ84UdBQG
+105:  q
+109:  QC
+119:  TwH6gsVoHbTU08sbzm3u9J
+166:  c1v4kMLsoTjVSu
+168:  3ReZ2P4WwSxmVdBwo3ERsGX
+178:  rG9N0
+179:  ssBaCTGNBxD0nxRNhbxw7McBdDXY
+180:  z30GW2w55lCu
+203:  qJ
+205:  HhH6hpkaaOM
+207:  w3AE oUcUABz5
+210:  fJD5sMmabLpqtsGURroqU0
+217:  gYaQe1yO0CNe6Giu N6MQdH
+223:  hbA9qwbnbBHw 29E
+227:  HhO97qXGicV
+231:  823si4ubQb6iyqO5ow
+237:  GsVXml5W
+241:  hzQd7tHOlG0d5Giqt0Gv5JdHl58bM
+252:  7YCBsvaA8l96Tmn7w
+254:  d4LvZ2 Pv MO506KRmcuFRD1
+260:  1ZQ4bA7Ib6AzSKAV8JVubtp4doa
+285:  kS
+294:  ceMaO0Wv
+301:  b6JlyDyqqy0
+314:  0GhLukAwxJkEW3WWxq01DXm
+328:  Y3jrD
+341:  ZJF1UqkXOJI2 hi9M
+346:  3Foa0n
+349:  I8yBQXdHtB
+350:  SubaDQLnZF
+355:  l0p0HJVj
+363:  a82Ohtx2z5QVd32qJcFnVNM7Y99
+374:  uqeH
+376:  1QvsNzD4rONDy
+391:  CKbbVPb
+394:  8jsRvtf2diOnVzDll7GbRCX0
+=== === === ===

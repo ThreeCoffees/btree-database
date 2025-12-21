@@ -82,21 +82,23 @@ impl Node {
                     .unwrap();
 
                 if position_in_parent > 0 {
-                    let sibling_left = btree.get_node(position_in_parent as u64 - 1);
-                    if sibling_left.keys.len() == btree.order {
+                    let sibling_left =
+                        btree.get_node(parent.children[position_in_parent - 1].unwrap());
+                    if sibling_left.keys.len() <= btree.order {
                         if position_in_parent < parent.children.len() - 1 {
-                            let sibling_right = btree.get_node(position_in_parent as u64 + 1);
-                            if sibling_right.keys.len() == btree.order {
+                            let sibling_right =
+                                btree.get_node(parent.children[position_in_parent + 1].unwrap());
+                            if sibling_right.keys.len() <= btree.order {
                                 return Err(());
                             }
-                            return Ok((parent, position_in_parent, sibling_left));
+                            return Ok((parent, position_in_parent, sibling_right));
                         }
                         return Err(());
                     }
                     return Ok((parent, position_in_parent - 1, sibling_left));
                 } else {
-                    let sibling = btree.get_node(position_in_parent as u64 + 1);
-                    if sibling.keys.len() == btree.order {
+                    let sibling = btree.get_node(parent.children[position_in_parent + 1].unwrap());
+                    if sibling.keys.len() <= btree.order {
                         return Err(());
                     }
                     return Ok((parent, 0, sibling));
@@ -123,23 +125,26 @@ impl Node {
                 if position_in_parent > 0 {
                     let sibling_left =
                         btree.get_node(parent.children[position_in_parent - 1].unwrap());
-                    if sibling_left.keys.len() == 2 * btree.order {
+                    if sibling_left.keys.len() >= 2 * btree.order {
                         if position_in_parent < parent.children.len() - 1 {
                             let sibling_right =
                                 btree.get_node(parent.children[position_in_parent + 1].unwrap());
-                            if sibling_right.keys.len() == 2 * btree.order {
+                            if sibling_right.keys.len() >= 2 * btree.order {
                                 return Err(());
                             }
-                            return Ok((parent, position_in_parent, sibling_left));
+                            println!("here0");
+                            return Ok((parent, position_in_parent, sibling_right));
                         }
                         return Err(());
                     }
+                    println!("here1");
                     return Ok((parent, position_in_parent - 1, sibling_left));
                 } else {
-                    let sibling = btree.get_node(position_in_parent as u64 + 1);
-                    if sibling.keys.len() == 2 * btree.order {
+                    let sibling = btree.get_node(parent.children[position_in_parent + 1].unwrap());
+                    if sibling.keys.len() >= 2 * btree.order {
                         return Err(());
                     }
+                    println!("here2");
                     return Ok((parent, 0, sibling));
                 }
             }

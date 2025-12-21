@@ -15,6 +15,9 @@ pub struct NodesFile {
     pub node_byte_size: usize,
     pub node_buffer: Vec<u8>,
     pub cache: HashMap<u64, Node>,
+    cache_size: usize,
+    pub file_write_ctr: u32,
+    pub file_read_ctr: u32,
 }
 
 impl PartialEq for NodesFile {
@@ -24,10 +27,8 @@ impl PartialEq for NodesFile {
     }
 }
 
-const CACHE_SIZE_LIMIT: usize = 10;
-
 impl NodesFile {
-    pub fn new(file_name: &Path, order: usize) -> Self {
+    pub fn new(file_name: &Path, order: usize, cache_size: usize) -> Self {
         let node_byte_size = Node::byte_size(order);
         Self {
             file: File::options()
@@ -41,6 +42,9 @@ impl NodesFile {
             node_byte_size,
             node_buffer: vec![0; node_byte_size],
             cache: HashMap::new(),
+            cache_size,
+            file_write_ctr: 0,
+            file_read_ctr: 0,
         }
     }
 
@@ -48,6 +52,7 @@ impl NodesFile {
         if self.cache.contains_key(&id) {
             self.cache.get(&id).unwrap().clone()
         } else {
+            self.file_read_ctr += 1;
             self.file
                 .seek(std::io::SeekFrom::Start(id * self.node_byte_size as u64))
                 .unwrap();
@@ -66,7 +71,7 @@ impl NodesFile {
 
     pub fn add_to_cache(&mut self, node: &Node) {
         self.cache.insert(node.id, node.clone());
-        if self.cache.len() >= CACHE_SIZE_LIMIT {
+        if self.cache.len() >= self.cache_size {
             self.write_cache();
         }
     }
@@ -85,6 +90,7 @@ impl NodesFile {
                 .unwrap();
             self.node_buffer = node.to_bytes(self.order);
             self.file.write(self.node_buffer.as_slice()).unwrap();
+            self.file_write_ctr += 1;
         }
         self.file.sync_data().unwrap();
         self.cache.clear();
