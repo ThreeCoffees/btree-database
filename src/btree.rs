@@ -1,6 +1,8 @@
 use std::path::Path;
 
-use crate::{data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::Record};
+use crate::{
+    data::Data, data_file::DataFile, node::Node, nodes_file::NodesFile, record::Record,
+};
 
 #[derive(PartialEq, Debug)]
 pub struct BTree {
@@ -8,15 +10,26 @@ pub struct BTree {
     pub nodes_file: NodesFile,
     pub data_file: DataFile,
     pub order: usize,
+    pub height: usize,
+    pub record_count: usize,
+}
+
+#[derive(Debug)]
+pub enum InsertedData {
+    NewData(Data),
+    ExistingData(u64),
+    None,
 }
 
 impl BTree {
-    pub fn new(nodes_file_name: &Path, data_file_name: &Path, order: usize) -> Self {
+    pub fn new(nodes_file_name: &Path, data_file_name: &Path, order: usize, buffer_size: usize, cache_size: usize) -> Self {
         Self {
             root_id: None,
-            nodes_file: NodesFile::new(nodes_file_name),
-            data_file: DataFile::new(data_file_name),
+            nodes_file: NodesFile::new(nodes_file_name, order, cache_size),
+            data_file: DataFile::new(data_file_name, buffer_size),
             order,
+            height: 0,
+            record_count: 0,
         }
     }
 
@@ -28,7 +41,15 @@ impl BTree {
         self.nodes_file.get_node(id)
     }
 
-    pub fn insert(&mut self, key: u64, data: Option<Data>) -> Result<(), ()> {
+    pub fn update_node(&mut self, node: &Node) {
+        self.nodes_file.update_node(node);
+    }
+
+    pub fn create_node(&mut self, node: &Node) {
+        self.nodes_file.create_node(node);
+    }
+
+    pub fn insert(&mut self, key: u64, data: InsertedData) -> Result<(), ()> {
         match self.search(key) {
             Ok(_) => Err(()),
             Err((_, node_id)) => {
@@ -36,10 +57,16 @@ impl BTree {
                     self.create_new_root(true);
                 }
                 let mut node = self.nodes_file.get_node(node_id);
-                let record = Record::new(key, self.data_file.next_id);
-                if let Some(data) = data {
+                let data_id = if let InsertedData::ExistingData(id) = data {
+                    id
+                } else {
+                    self.data_file.next_id
+                };
+                let record = Record::new(key, data_id);
+                if let InsertedData::NewData(data) = data {
                     self.data_file.write_data(&record, &data).unwrap();
                 }
+                self.record_count+=1;
                 node.insert(self, record, None, None)
             }
         }
@@ -49,10 +76,40 @@ impl BTree {
         let (_, node_id) = self.search(key).map_err(|_| ())?;
 
         self.get_node(node_id).delete(self, key)?;
+        self.record_count-=1;
         Ok(())
     }
 
-    pub fn update(&mut self, old_key: u64, new_key: u64, new_data: Option<Data>) -> Result<(), ()> {
+    pub fn print(&mut self) {
+        println!("\n=== B Tree ===");
+        println!("Order: {}", self.order);
+        println!("Nodes file: {:?}", self.nodes_file.file);
+        println!("Data file: {:?}", self.data_file.file);
+        println!("--- Nodes ---");
+        if let Some(root_id) = self.root_id {
+            let root = self.get_node(root_id);
+            root.print(self, 0);
+        }
+        println!("--- Records ---");
+        if let Some(root_id) = self.root_id {
+            let root = self.get_node(root_id);
+            root.print_in_order(self);
+        }
+        println!("=== === === ===");
+    }
+
+    pub fn print_all_nodes(&mut self) {
+        println!("\n=== B Tree Nodes ===");
+
+        let node_count = self.nodes_file.next_id;
+        for id in 0..node_count {
+            println!("{:?}", self.nodes_file.get_node(id));
+        }
+
+        println!("=== === === === ===");
+    }
+
+    pub fn update(&mut self, old_key: u64, new_key: u64, new_data: InsertedData) -> Result<(), ()> {
         if let Ok((record, _)) = self.search(old_key) {
             if let Ok(_) = self.search(new_key)
                 && old_key != new_key
@@ -60,12 +117,14 @@ impl BTree {
                 return Err(());
             }
 
-            if let Some(data) = new_data {
+            if let InsertedData::NewData(data) = new_data {
                 self.data_file.write_data(&record, &data).unwrap();
             }
 
-            self.delete(old_key)?;
-            self.insert(new_key, None)?;
+            if old_key != new_key {
+                self.delete(old_key)?;
+                self.insert(new_key, InsertedData::ExistingData(record.data_id))?;
+            }
 
             Ok(())
         } else {
@@ -77,6 +136,7 @@ impl BTree {
         let root = Node::new(is_leaf, self.get_next_id(), self.order);
         self.nodes_file.create_node(&root);
         self.root_id = Some(root.id);
+        self.height+=1;
         root
     }
 

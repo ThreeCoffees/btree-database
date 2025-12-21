@@ -12,33 +12,15 @@ use crate::{
     btree::{self, BTree}, consts::{MAX_RECORD_LENGTH, PADDING_CHAR}, data::Data
 };
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Record {
     pub key: u64,
     pub data_id: u64,
-    //pub data: Option<Data>,
 }
 
 impl Ord for Record {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.key.cmp(&other.key)
-    }
-}
-
-impl Display for Record {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        /*let data_str = match &self.data {
-            Some(data) => format!("{}", data),
-            None => "not read from file".into(),
-        };*/
-        write!(
-            f,
-            "key: {:>5}, data: :_<30 | data_id: {:?}, data_address: {:?}",
-            self.key,
-            //data_str,
-            self.data_id,
-            self.data_address()
-        )
     }
 }
 
@@ -70,6 +52,8 @@ impl TryFrom<&[u8]> for Record {
 
     type Error = TryFromSliceError;
 }
+
+pub const RECORD_SIZE: usize = 16;
 
 impl From<&Record> for Vec<u8> {
     fn from(value: &Record) -> Self {
