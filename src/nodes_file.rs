@@ -72,6 +72,7 @@ impl NodesFile {
     pub fn add_to_cache(&mut self, node: &Node) {
         self.cache.insert(node.id, node.clone());
         if self.cache.len() >= self.cache_size {
+            println!("Writing cache");
             self.write_cache();
         }
     }

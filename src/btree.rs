@@ -10,6 +10,8 @@ pub struct BTree {
     pub nodes_file: NodesFile,
     pub data_file: DataFile,
     pub order: usize,
+    pub height: usize,
+    pub record_count: usize,
 }
 
 #[derive(Debug)]
@@ -26,6 +28,8 @@ impl BTree {
             nodes_file: NodesFile::new(nodes_file_name, order, cache_size),
             data_file: DataFile::new(data_file_name, buffer_size),
             order,
+            height: 0,
+            record_count: 0,
         }
     }
 
@@ -62,6 +66,7 @@ impl BTree {
                 if let InsertedData::NewData(data) = data {
                     self.data_file.write_data(&record, &data).unwrap();
                 }
+                self.record_count+=1;
                 node.insert(self, record, None, None)
             }
         }
@@ -71,6 +76,7 @@ impl BTree {
         let (_, node_id) = self.search(key).map_err(|_| ())?;
 
         self.get_node(node_id).delete(self, key)?;
+        self.record_count-=1;
         Ok(())
     }
 
@@ -130,6 +136,7 @@ impl BTree {
         let root = Node::new(is_leaf, self.get_next_id(), self.order);
         self.nodes_file.create_node(&root);
         self.root_id = Some(root.id);
+        self.height+=1;
         root
     }
 

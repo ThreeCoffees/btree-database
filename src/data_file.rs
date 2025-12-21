@@ -85,7 +85,6 @@ impl DataFile {
         let data_buf_offset: usize = record.data_address() as usize - record_buf_position as usize;
 
         if record_buf_position != self.curr_buf_position {
-            println!("moving the buffer {} {}", record_buf_position, data_buf_offset);
             self.read_buffer(record.data_id)?;
         }
 

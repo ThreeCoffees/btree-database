@@ -291,6 +291,7 @@ impl Node {
             self.merge(btree);
         } else if self.keys.len() == 0 {
             btree.root_id = self.children[0];
+            btree.height -= 1;
             if let Some(child_id) = self.children[0] {
                 let mut node = btree.get_node(child_id);
                 node.parent_node_id = None;
